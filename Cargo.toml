@@ -7,3 +7,11 @@ edition = "2018"
 
 [dependencies]
 bevy = "0.5.0"
+
+# Enable optimizations for dependencies (incl. Bevy), but not for code
+[profile.dev.package."*"]
+opt-level = 3
+
+# Some optimization for code:
+[profile.dev]
+opt-level = 1
