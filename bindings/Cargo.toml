@@ -1,5 +1,5 @@
 [package]
-name = "conerobo_tracker"
+name = "bindings"
 version = "0.1.0"
 edition = "2018"
 
@@ -7,5 +7,6 @@ edition = "2018"
 
 [dependencies]
 windows = "0.18.0"
-bindings = {path = "bindings"}
-image = "0.23.14"
+
+[build-dependencies]
+windows = "0.18.0"
