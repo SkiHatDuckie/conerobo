@@ -1,10 +1,4 @@
 use bindings::{
-    Windows::Win32::Foundation::{
-        HWND, RECT,
-    },
-    Windows::Win32::UI::WindowsAndMessaging::{
-        FindWindowW, GetWindowRect,
-    },
     Windows::Win32::Graphics::Gdi::{
         SRCCOPY, DIB_RGB_COLORS, BI_RGB, HDC, HBITMAP, 
         HGDIOBJ, BITMAPINFO, BITMAPINFOHEADER,
@@ -19,24 +13,17 @@ use std::path::Path;
 use image;
 
 // Capture a window and return its pixel data
-fn capture_window(window_title: &str) -> Vec<u8> {
-    // Window handle + rect
-    let hwnd: HWND = unsafe { FindWindowW(None, window_title) };
-    let mut wnd_rect: RECT = unsafe { mem::zeroed() };
-    unsafe { GetWindowRect(hwnd, &mut wnd_rect) };
-    let width: i32 = wnd_rect.right - wnd_rect.left;
-    let height: i32 = wnd_rect.bottom - wnd_rect.top;
-
+fn capture_window(x: i32, y: i32, w: i32, h: i32) -> Vec<u8> {
     // Device contexts
-    let wnd_hdc: HDC = unsafe { GetDC(hwnd) };
+    let wnd_hdc: HDC = unsafe { GetDC(None) };
     let capture_hdc: CreatedHDC = unsafe { CreateCompatibleDC(wnd_hdc) };
 
     // Format pixels should be grabbed in
     let bmi = BITMAPINFO {
         bmiHeader: BITMAPINFOHEADER {
             biSize: mem::size_of::<BITMAPINFOHEADER>() as u32,
-            biWidth: width,
-            biHeight: -height,
+            biWidth: w,
+            biHeight: -h,
             biPlanes: 1,
             biBitCount: 32,
             biCompression: BI_RGB as u32,
@@ -59,10 +46,10 @@ fn capture_window(window_title: &str) -> Vec<u8> {
     let hbitmap_old: HGDIOBJ = unsafe { SelectObject(capture_hdc, hbitmap) };
 
     // Copy the screen from memory
-    unsafe { BitBlt(capture_hdc, 0, 0, width, height, wnd_hdc, 0, 0, SRCCOPY) };
+    unsafe { BitBlt(capture_hdc, 0, 0, w, h, wnd_hdc, x, y, SRCCOPY) };
 
     // Convert raw pointer into Vec
-    let size = (width * height * 4) as usize;
+    let size = (w * h * 4) as usize;
     let bits = unsafe { std::slice::from_raw_parts(bits as *mut u8, size).to_owned() };
 
     // Remove alpha channel values and change from BGR to RGB
@@ -77,13 +64,13 @@ fn capture_window(window_title: &str) -> Vec<u8> {
     }
 
     // For debugging: Save pixel data to file
-    image::save_buffer(&Path::new("frame.png"), &rgb_bits, width as u32, height as u32, image::ColorType::Rgb8)
+    image::save_buffer(&Path::new("frame.png"), &rgb_bits, w as u32, h as u32, image::ColorType::Rgb8)
         .expect("Error saving captured frame");
 
     // Cleanup
     unsafe { SelectObject(capture_hdc, hbitmap_old) };
     unsafe { DeleteDC(capture_hdc) };
-    unsafe { ReleaseDC(hwnd, wnd_hdc) };
+    unsafe { ReleaseDC(None, wnd_hdc) };
     unsafe { DeleteObject(hbitmap) };
 
     // Return captured bits
@@ -92,5 +79,5 @@ fn capture_window(window_title: &str) -> Vec<u8> {
 
 fn main() {
     // test window capturing
-    capture_window("NES - Super Mario Bros.");
+    capture_window(100, 100, 300, 300);
 }
