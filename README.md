@@ -1,2 +1,2 @@
 # conerobo_tracker
-WORK IN PROGRESS
+Program that will hopefully help with creating low-level or embedded software. WORK IN PROGRESS
