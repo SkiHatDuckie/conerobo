@@ -8,3 +8,10 @@ edition = "2018"
 [dependencies]
 bindings = {path = "bindings"}
 windows = "0.18.0"
+fltk = "1.1.12"
+
+[profile.release]
+opt-level = 3
+
+[profile.dev]
+opt-level = 2
