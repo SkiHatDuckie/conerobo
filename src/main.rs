@@ -40,11 +40,19 @@ fn main() {
 
         if !received.is_err() { input = received.unwrap(); }
 
-        // process user input
+        // process input
         if !input.is_empty() {
+            /*  
+             *  === Commands List ===
+             *  help: display list of commands
+             *  quit: terminate process"
+            */
             match input.trim() {
+                "help" => println!("=== Commands List === \n\
+                                   help: display list of commands \n\
+                                   quit: terminate process"),
                 "quit" => break,
-                _ => println!("Unknown command \"{}\"", input.trim())
+                _ => println!("Unknown command \"{}\": type \"help\" for commands", input.trim())
             }
 
             print!("> ");
