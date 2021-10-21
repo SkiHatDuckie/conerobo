@@ -7,6 +7,11 @@ use std::sync::mpsc::{
     self, Sender, Receiver,
 };
 
+mod lua2rust;
+
+mod parts;
+use parts::Parts;
+
 
 // check for user input in seperate thread
 fn check_input(sender: Sender<String>) {
@@ -25,7 +30,13 @@ fn main() {
     let (sender, receiver): (Sender<String>, Receiver<String>) = mpsc::channel();
     let mut sender_clone = sender.clone();
 
-    // startup text
+    // startup
+    println!("Searching for parts...");
+    let parts = Parts::new();
+
+    println!("Checking for lua scripts...");
+    let luas = parts.get_lua_parts();
+
     println!("=== ConeRobo ===");
     print!("> ");
 
@@ -38,20 +49,43 @@ fn main() {
 
         let received = receiver.try_recv();
 
-        if !received.is_err() { input = received.unwrap(); }
+        if !received.is_err() {
+            input = received.unwrap();
+        }
 
         // process input
         if !input.is_empty() {
             /*  
              *  === Commands List ===
-             *  help: display list of commands
-             *  quit: terminate process"
+             *  help:   display list of commands
+             *  launch: run the core and all selected parts
+             *  quit:   terminate process
+             *  parts:  show discovered parts
             */
             match input.trim() {
-                "help" => println!("=== Commands List === \n\
-                                   help: display list of commands \n\
-                                   quit: terminate process"),
+                "help" => println!(
+                    "=== Commands List === \n\
+                    help:   display list of commands \n\
+                    launch: run the core and all selected parts \n\
+                    quit:   terminate process \n\
+                    parts:  show discovered parts"
+                ),
+
+                "launch" => lua2rust::load_scripts(&luas).unwrap(),
+
                 "quit" => break,
+
+                "parts" => {
+                    println!(
+                        "Found {} parts from {} directories:", 
+                        parts.get_part_names().len(), 
+                        parts.get_search_paths().len()
+                    );
+                    for part in parts.get_part_names() {
+                        println!("{}", part)
+                    }
+                },
+
                 _ => println!("Unknown command \"{}\": type \"help\" for commands", input.trim())
             }
 
