@@ -12,7 +12,6 @@ mod lua2rust;
 mod parts;
 use parts::Parts;
 
-
 // check for user input in seperate thread
 fn check_input(sender: Sender<String>) {
     thread::spawn(move || {
@@ -23,7 +22,6 @@ fn check_input(sender: Sender<String>) {
         }
     });
 }
-
 
 fn main() {
     // let mut memory = HashMap::new();
@@ -55,13 +53,11 @@ fn main() {
 
         // process input
         if !input.is_empty() {
-            /*  
-             *  === Commands List ===
-             *  help:   display list of commands
-             *  launch: run the core and all selected parts
-             *  quit:   terminate process
-             *  parts:  show discovered parts
-            */
+            //  === Commands List ===
+            //  help:   display list of commands
+            //  launch: run the core and all selected parts
+            //  quit:   terminate process
+            //  parts:  show discovered parts
             match input.trim() {
                 "help" => println!(
                     "=== Commands List === \n\
@@ -71,7 +67,7 @@ fn main() {
                     parts:  show discovered parts"
                 ),
 
-                "launch" => lua2rust::load_scripts(&luas).unwrap(),
+                "launch" => lua2rust::launch(&luas),
 
                 "quit" => break,
 
