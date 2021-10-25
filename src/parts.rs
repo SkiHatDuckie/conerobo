@@ -1,8 +1,6 @@
-use std::fs::{
-    self,
-};
+use std::fs;
 
-pub struct Parts { 
+pub struct Parts {
     search_paths: Vec<String>,
     part_names: Vec<String>,
 }

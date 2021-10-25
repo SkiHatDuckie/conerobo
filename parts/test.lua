@@ -1,1 +1,1 @@
-print("This message is in lua!")
+print("This is lua script 1!")
