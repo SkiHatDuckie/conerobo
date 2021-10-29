@@ -1,9 +1,11 @@
+// controlling lua scripts from rust
 use rlua::{
     Lua, Result,
 };
 use std::fs::File;
 use std::io::Read;
 use std::thread;
+
 
 // initialize lua states
 pub fn launch(luas: &Vec<String>) {

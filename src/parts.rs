@@ -1,4 +1,6 @@
+// parts management
 use std::fs;
+
 
 pub struct Parts {
     search_paths: Vec<String>,
@@ -6,9 +8,9 @@ pub struct Parts {
 }
 
 impl Parts {
-    // constructor
+    // create instance of part managaer
     pub fn new() -> Parts {
-        // get part filenames
+        // get directories of parts
         let mut parts = Vec::new();
         match fs::read_dir("parts/") {
             Ok(paths) => for path in paths {
@@ -28,7 +30,7 @@ impl Parts {
         self.search_paths.clone()
     }
 
-    // returns part filenames
+    // returns part diectories
     pub fn get_part_names(&self) -> Vec<String> {
         self.part_names.clone()
     }

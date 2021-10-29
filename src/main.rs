@@ -1,8 +1,9 @@
+// main
 use std::io::{
     stdin, stdout, Write,
 };
-// use std::collections::HashMap;
 use std::thread;
+// use std::collections::HashMap;
 use std::sync::mpsc::{
     self, Sender, Receiver,
 };
@@ -10,7 +11,11 @@ use std::sync::mpsc::{
 mod lua2rust;
 
 mod parts;
-use parts::Parts;
+use parts::*;
+
+mod cli;
+use cli::*;
+
 
 // check for user input in seperate thread
 fn check_input(sender: Sender<String>) {
@@ -28,11 +33,12 @@ fn main() {
     let (sender, receiver): (Sender<String>, Receiver<String>) = mpsc::channel();
     let mut sender_clone = sender.clone();
 
-    // startup
-    println!("Searching for parts...");
+    let mut cli = Cli::init().unwrap();
+
+    cli.output("Searching for parts...");
     let parts = Parts::new();
 
-    println!("Checking for lua scripts...");
+    cli.output("Checking for lua scripts...");
     let luas = parts.get_lua_parts();
 
     println!("=== ConeRobo ===");
