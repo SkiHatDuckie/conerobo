@@ -1,7 +1,6 @@
 // parts management
 use std::fs;
 
-
 pub struct PartsManager {
     search_paths: Vec<String>,
     parts: Vec<String>,
