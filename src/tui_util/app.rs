@@ -15,23 +15,33 @@ use tui_util::{
 use parts::*;
 
 
+pub enum InputMode {
+    Normal,
+    Command,
+}
 
 // App holds the state of the application
+// input_mode: Current input mode
+// input: Current value of the input box
+// output: History of recorded messages
+// command: Value entered from input box
+// tabs: Names of tabs
 pub struct App {
-    // Current value of the input box
+    pub input_mode: InputMode,
     pub input: String,
-    // History of recorded messages
     pub output: Vec<String>,
-    // Value entered from input box
     pub command: String,
+    pub tab_names: Vec<&'static str>,
 }
 
 impl Default for App {
     fn default() -> App {
         App {
+            input_mode: InputMode::Normal,
             input: String::new(),
             output: Vec::new(),
             command: String::new(),
+            tab_names: vec!["core", "parts"],
         }
     }
 }
@@ -52,17 +62,30 @@ pub fn run_app<B: Backend> (terminal: &mut Terminal<B>, mut app: App) -> Result<
         
         // receive input
         match receiver.recv()? {
-            backend::Event::Input(event) => match event.code {
-                KeyCode::Enter => {
-                    app.command = app.input.drain(..).collect();
-                }
-                KeyCode::Char(c) => {
-                    app.input.push(c);
-                }
-                KeyCode::Backspace => {
-                    app.input.pop();
-                }
-                _ => {},
+            backend::Event::Input(event) => match app.input_mode {
+                InputMode::Normal => match event.code {
+                    KeyCode::Enter => {
+                        app.input_mode = InputMode::Command;
+                    },
+                    KeyCode::Char('q') => {
+                        backend::disable_raw()?;
+                        terminal.show_cursor()?;
+                        return Ok(());
+                    },
+                    _ => {},
+                },
+                InputMode::Command => match event.code {
+                    KeyCode::Enter => {
+                        app.command = app.input.drain(..).collect();
+                    },
+                    KeyCode::Char(c) => {
+                        app.input.push(c);
+                    },
+                    KeyCode::Backspace => {
+                        app.input.pop();
+                    },
+                    _ => {},
+                },
             },
             backend::Event::Tick => {},
         }
@@ -79,7 +102,7 @@ pub fn run_app<B: Backend> (terminal: &mut Terminal<B>, mut app: App) -> Result<
             // help:         display list of commands
             // launch:       run the core and all selected parts
             // mount [part]: add part to be managed by core
-            // quit:         terminate process
+            // quit:         change InputMode back to Normal
             // parts:        show discovered parts
             match operation {
                 "help" => {
@@ -87,7 +110,7 @@ pub fn run_app<B: Backend> (terminal: &mut Terminal<B>, mut app: App) -> Result<
                     app.output.push("help:         display list of commands".to_owned());
                     app.output.push("launch:       run the core and all selected parts".to_owned());
                     app.output.push("mount [part]: add part to be managed by core".to_owned());
-                    app.output.push("quit:         terminate process".to_owned());
+                    app.output.push("quit:         change InputMode back to Normal".to_owned());
                     app.output.push("parts:        show discovered parts".to_owned());
                 },
 
@@ -96,9 +119,7 @@ pub fn run_app<B: Backend> (terminal: &mut Terminal<B>, mut app: App) -> Result<
                 "mount" => parts.mount(operands[0]),
 
                 "quit" => {
-                    backend::disable_raw()?;
-                    terminal.show_cursor()?;
-                    return Ok(());
+                    app.input_mode = InputMode::Normal;
                 },
 
                 "parts" => {
