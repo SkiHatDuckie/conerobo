@@ -33,7 +33,7 @@ fn load_script(lua: String) -> Result<()> {
         // load and execute the code
         lua_ctx
             .load(&*buf)
-            .set_name("test")?
+            .set_name("lua script")?
             .exec()?;
         
         Ok(())
