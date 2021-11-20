@@ -49,12 +49,12 @@ impl PartsManager {
     }
 
     // mounts part to core
-    pub fn mount(&mut self, part: &str) {
+    pub fn mount(&mut self, part: &str) -> String {
         if self.parts.contains(&part.to_owned()) {
             self.mounted_parts.push(part.to_owned());
-            println!("Successfully mounted {} to core", part);
+            format!("Successfully mounted {} to core", part)
         } else {
-            println!("Failed to mount. Reason: Unknown part name \"{}\"", part);
+            format!("Failed to mount. Reason: Unknown part name \"{}\"", part)
         }
     }
 }
