@@ -13,6 +13,7 @@ use tui_util::{
     ui::ui,
 };
 use parts::*;
+use lua2rust::*;
 
 
 pub enum InputMode {
@@ -54,6 +55,9 @@ pub fn run_app<B: Backend> (terminal: &mut Terminal<B>, mut app: App) -> Result<
 
     // Initialize parts manager
     let mut parts = PartsManager::new();
+
+    // Initialize lua to rust bindings
+    let mut lua_bindings = Lua2Rust::default();
 
     // main loop
     loop {
@@ -100,7 +104,7 @@ pub fn run_app<B: Backend> (terminal: &mut Terminal<B>, mut app: App) -> Result<
 
             // ========== Commands List ==========
             // help:         display list of commands
-            // launch:       run the core and all selected parts
+            // load:         load scripts and other resources for launch
             // mount [part]: add part to be managed by core
             // quit:         change InputMode back to Normal
             // parts:        show discovered parts
@@ -108,15 +112,15 @@ pub fn run_app<B: Backend> (terminal: &mut Terminal<B>, mut app: App) -> Result<
                 "help" => {
                     app.output.push("========== Commands List ==========".to_owned());
                     app.output.push("help:         display list of commands".to_owned());
-                    app.output.push("launch:       run the core and all selected parts".to_owned());
+                    app.output.push("load:         load scripts and other resources for launch".to_owned());
                     app.output.push("mount [part]: add part to be managed by core".to_owned());
                     app.output.push("quit:         change InputMode back to Normal".to_owned());
                     app.output.push("parts:        show discovered parts".to_owned());
                 },
 
-                "launch" => lua2rust::launch(&parts.get_mounted_lua_parts()),
+                "load" => lua_bindings.load(parts.get_mounted_lua_parts()),
 
-                "mount" => parts.mount(operands[0]),
+                "mount" => app.output.push(parts.mount(operands[0])),
 
                 "quit" => {
                     app.input_mode = InputMode::Normal;
@@ -144,6 +148,18 @@ pub fn run_app<B: Backend> (terminal: &mut Terminal<B>, mut app: App) -> Result<
 
             // clear command to avoid executing several times
             app.command = String::new();
+        }
+
+        // collect sent data from luas
+        if lua_bindings.is_loaded() {
+            let from_lua = lua_bindings.get_from_lua();
+
+            // check for messages for core
+            for i in from_lua.iter() {
+                if i.label == "MSG".to_owned() {
+                    app.output.push(i.data.clone());
+                }
+            }
         }
     }
 }
