@@ -1,12 +1,14 @@
+mod accuracy_score;
+pub mod classifier;
 mod mnist;
 mod random_ai;
 mod perceptron;
-pub mod classifier;
 
-use mnist::*;
-use random_ai::*;
-use perceptron::*;
+use accuracy_score::accuracy_score;
 use classifier::Classifier;
+use mnist::*;
+use random_ai::RandomAI;
+use perceptron::Perceptron;
 
 fn main() {
     println!("Process MNIST dataset\n");
@@ -26,9 +28,9 @@ fn main() {
     perceptron2.fit(&x_train, &y_train);
 
     println!("Test classifier objects\n");
-    let random_ai_score = random_ai.score(&x_test, &y_test);
-    let perceptron_score = perceptron.score(&x_test, &y_test);
-    let perceptron_score2 = perceptron2.score(&x_test, &y_test);
+    let random_ai_score = accuracy_score(&x_test, &y_test, random_ai);
+    let perceptron_score = accuracy_score(&x_test, &y_test, perceptron);
+    let perceptron_score2 = accuracy_score(&x_test, &y_test, perceptron2);
 
     println!("Results: [{} predictions]", y_test.capacity());
     println!("Classifier           | Accuracy (%)");

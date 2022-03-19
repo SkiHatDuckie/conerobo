@@ -1,4 +1,4 @@
-use super::classifier::*;
+use crate::classifier::Classifier;
 
 // A perceptron designed to handle multi-class prediction problems
 pub struct Perceptron {
@@ -83,23 +83,5 @@ impl Classifier for Perceptron {
         }
 
         y_pred as u8
-    }
-
-    fn score(&self, x: &Vec<Vec<u8>>, y: &Vec<u8>) -> f64 {
-        let mut scores: Vec<bool> = Vec::new();
-        let m = y.capacity();
-
-        for i in 0..m {
-            let y_pred = self.predict(&x[i]);
-            scores.push(y[i] == y_pred);
-        }
-
-        let correct = scores
-                        .iter()
-                        .filter(|&a| *a)
-                        .count() as f64;
-        let accuracy = correct / m as f64 * 100.0;
-
-        accuracy
     }
 }
