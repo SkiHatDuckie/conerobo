@@ -30,7 +30,7 @@ macro_rules! load_bytes {
 }
 
 struct MNISTImageHeader {
-    magic_number: u32,
+    _magic_number: u32,
     number_of_images: u32,
     n_rows: u32,
     n_cols: u32,
@@ -39,7 +39,7 @@ struct MNISTImageHeader {
 impl MNISTImageHeader {
     fn load<T: Read>(reader: &mut T) -> MNISTImageHeader {  
         MNISTImageHeader {
-            magic_number: BigEndian::read_u32(&load_bytes!(4; and reader)),
+            _magic_number: BigEndian::read_u32(&load_bytes!(4; and reader)),
             number_of_images: BigEndian::read_u32(&load_bytes!(4; and reader)),
             n_rows: BigEndian::read_u32(&load_bytes!(4; and reader)),
             n_cols: BigEndian::read_u32(&load_bytes!(4; and reader)),
@@ -48,60 +48,53 @@ impl MNISTImageHeader {
 }
 
 struct MNISTLabelHeader {
-    magic_number: u32,
+    _magic_number: u32,
     number_of_labels: u32,
 }
 
 impl MNISTLabelHeader {
     fn load<T: Read>(reader: &mut T) -> MNISTLabelHeader {
         MNISTLabelHeader {
-            magic_number: BigEndian::read_u32(&load_bytes!(4; and reader)),
+            _magic_number: BigEndian::read_u32(&load_bytes!(4; and reader)),
             number_of_labels: BigEndian::read_u32(&load_bytes!(4; and reader)),
         }
     }
 }
 
-// Reads and returns a three dimensional array of all images and their pixel
-// values from a file of MNIST images.
-pub fn read_mnist_image(path: &str) -> Vec<Vec<Vec<u8>>> {
+// Read and return a vector of vectors containing the pixel values of each
+// image from a file of MNIST images.
+pub fn read_mnist_image(path: &str) -> Vec<Vec<u8>> {
     let mut buf_reader = match read_file(path) {
         Err(why) => panic!("Couldn't open {}: {}", path, why),
         Ok(buf_reader) => buf_reader
     };
 
     let header: MNISTImageHeader = MNISTImageHeader::load(&mut buf_reader);
-    println!(
-        "Mgc={}, NImg={}, NRow={}, NCol={}",
-        header.magic_number,
-        header.number_of_images,
-        header.n_rows,
-        header.n_cols
-    );
 
-    let mut images: Vec<Vec<Vec<u8>>> = vec![
+    let mut images: Vec<Vec<u8>> = 
+    vec![
         vec![
-            vec![
-                0u8; header.n_cols as usize
-            ]; 
-            header.n_rows as usize
+            0u8; 
+            header.n_cols as usize * header.n_rows as usize + 1
         ]; 
         header.number_of_images as usize
     ];
 
     for i in 0..header.number_of_images {
-        for row in 0..header.n_rows {
-            for col in 0..header.n_cols {
-                let mut buf = [0u8; 1];
-                buf_reader.read_exact(&mut buf).unwrap();
-                images[i as usize][row as usize][col as usize] = buf[0];
-            }
+        // Add a dummy variable for calculting the bias
+        images[i as usize][0] = 1;
+
+        for j in 1..header.n_rows * header.n_cols + 1 {
+            let mut buf = [0u8; 1];
+            buf_reader.read_exact(&mut buf).unwrap();
+            images[i as usize][j as usize] = buf[0];
         }
     }
 
     images
 }
 
-// Reads and returns an array of labels from a file of MNIST labels.
+// Read and return a vector of labels from a file of MNIST labels.
 pub fn read_mnist_label(path: &str) -> Vec<u8> {
     let mut buf_reader = match read_file(path) {
         Err(why) => panic!("Couldn't open {}: {}", path, why),
@@ -109,7 +102,6 @@ pub fn read_mnist_label(path: &str) -> Vec<u8> {
     };
 
     let header: MNISTLabelHeader = MNISTLabelHeader::load(&mut buf_reader);
-    println!("Mgc={}, NLbl={}", header.magic_number, header.number_of_labels);
 
     let mut labels = vec![0u8; header.number_of_labels as usize];
 
@@ -122,7 +114,7 @@ pub fn read_mnist_label(path: &str) -> Vec<u8> {
     labels
 }
 
-// Opens a file and returns a `BufReader` for reading data 
+// Open a file and return a `BufReader` for reading data 
 // from a MNIST labels set.
 fn read_file(path: &str) -> io::Result<BufReader<File>> {
     let file = OpenOptions::new().read(true).open(path)?;
