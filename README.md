@@ -7,7 +7,7 @@ Will Update this README as development continues. :]
 ConeRobo is not a single machine learning model, but instead an application for 
 combining multiple programs and learning models in a modular fashion.
 
-Features of ConoeRobo will include:
+Features of ConeRobo will include:
 - Sending data between various connected programs.
 - Configuration scripts for specifying how ConeRobo should handle a program, 
 without needing to modify the program itself.
