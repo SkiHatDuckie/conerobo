@@ -7,7 +7,7 @@ Will Update this README as development continues. :]
 ConeRobo is not a single machine learning model, but instead an application for 
 combining multiple programs and learning models in a modular fashion.
 
-Features of ConoeRobo will include:
+Features of ConeRobo will include:
 - Sending data between various connected programs.
 - Configuration scripts for specifying how ConeRobo should handle a program, 
 without needing to modify the program itself.
@@ -25,8 +25,8 @@ make this a real thing, and if anyone has suggestions or questions for me, pleas
 tell me! [SkiHatDuckie@gmail.com]
 
 ## Current Task:
-Creating different classifiers to read handwritten didgits to teach myself 
-programming in rust and machine learning algorithms in general.
+Creating different classifiers to read handwritten digits to teach myself 
+programming in rust, and machine learning algorithms in general.
 
 This is not necessarily what ConeRobo is going to be, and this code will 
 likely be moved to it's own repository later on. However, I feel like this 
