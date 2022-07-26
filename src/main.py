@@ -1,6 +1,8 @@
 import os
 import pytermgui as ptg
 
+import boot
+
 
 def load_app_yaml(filename: str) -> ptg.WidgetNamespace:
     """Finds and loads a YAML file containing information about the structure of the TUI.
@@ -15,10 +17,15 @@ def load_app_yaml(filename: str) -> ptg.WidgetNamespace:
         return loader.load(open(path, "r", encoding="utf-8"))
 
 
-if __name__ == "__main__":
+def run_tui() -> None:
+    """Starts up the TUI and loads the app's widgets"""
     app = load_app_yaml("app.yml")
 
     with ptg.WindowManager() as manager:
         manager.add(app.MainWindow.center())
-
         manager.run()
+
+
+if __name__ == "__main__":
+    boot.configure_virtual_terminal()
+    run_tui()
