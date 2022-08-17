@@ -1,7 +1,7 @@
 mod utils;
 
 use utils::{
-    Dropdown, ExitButton
+    Dropdown, UIName, UIButton, UIButtonBundle
 };
 use bevy::{
     prelude::*,
@@ -22,7 +22,6 @@ fn main() {
         .insert_resource(WinitSettings::desktop_app())
         .add_startup_system(setup)
         .add_system(process_button_interaction)
-        .add_system(process_exit_button_interaction)
         .add_system(update_dropdowns.after(process_button_interaction))
         .run();
 }
@@ -33,103 +32,106 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     // Camera
     commands.spawn_bundle(Camera2dBundle::default());
 
-    // Spawn entities
-    commands
-        // Root node
-        .spawn_bundle(NodeBundle {
-            style: Style {
-                flex_direction: FlexDirection::ColumnReverse,
-                justify_content: JustifyContent::SpaceBetween,
-                size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
+    // UI Entities
+    let root_node = NodeBundle {
+        style: Style {
+            flex_direction: FlexDirection::ColumnReverse,
+            justify_content: JustifyContent::SpaceBetween,
+            size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
+            ..default()
+        },
+        color: Color::rgb_u8(73, 153, 187).into(),
+        ..default()
+    };
+    let menu_bar = NodeBundle {
+        style: Style {
+            justify_content: JustifyContent::FlexStart,
+            position_type: PositionType::Absolute,
+            position: UiRect {
+                left: Val::Px(0.0),
+                top: Val::Px(0.0),
                 ..default()
             },
-            color: Color::rgb_u8(73, 153, 187).into(),
+            size: Size::new(Val::Percent(100.0), Val::Px(22.0)),
             ..default()
-        })
+        },
+        color: Color::rgb_u8(241, 246, 255).into(),
+        ..default()
+    };
+    let file_button = UIButtonBundle {
+        name: UIName { name: "dropdown".to_owned() },
+        style: Style {
+            size: Size::new(Val::Auto, Val::Auto),
+            justify_content: JustifyContent::Center,
+            align_items: AlignItems::Center,
+            ..default()
+        },
+        color: Color::NONE.into(),
+        ..default()
+    };
+    let file_button_text = TextBundle::from_section(
+        "File", 
+        TextStyle {
+            font: font_handle.clone(),
+            font_size: 20.0,
+            color: Color::rgb_u8(26, 24, 36)
+        }
+    );
+    let file_button_dropdown = NodeBundle {
+        style: Style {
+            justify_content: JustifyContent::FlexStart,
+            position_type: PositionType::Absolute,
+            position: UiRect {
+                left: Val::Px(0.0),
+                top: Val::Px(22.0),
+                ..default()
+            },
+            size: Size::new(Val::Auto, Val::Auto),
+            ..default()
+        },
+        color: Color::rgb_u8(171, 177, 179).into(),
+        visibility: Visibility { is_visible: false },
+        ..default()
+    };
+    let exit_button = UIButtonBundle {
+        name: UIName { name: "exit".to_owned() },
+        style: Style {
+            size: Size::new(Val::Auto, Val::Auto),
+            justify_content: JustifyContent::Center,
+            align_items: AlignItems::Center,
+            ..default()
+        },
+        color: Color::NONE.into(),
+        ..default()
+    };
+    let exit_button_text = TextBundle::from_section(
+        "Exit", 
+        TextStyle {
+            font: font_handle.clone(),
+            font_size: 20.0,
+            color: Color::rgb_u8(26, 24, 36)
+        }
+    );
+
+    // Create UI node tree
+    commands
+        .spawn_bundle(root_node)
         .with_children(|parent| {
-            // Menu bar
             parent
-                .spawn_bundle(NodeBundle {
-                    style: Style {
-                        justify_content: JustifyContent::FlexStart,
-                        position_type: PositionType::Absolute,
-                        position: UiRect {
-                            left: Val::Px(0.0),
-                            top: Val::Px(0.0),
-                            ..default()
-                        },
-                        size: Size::new(Val::Percent(100.0), Val::Px(22.0)),
-                        ..default()
-                    },
-                    color: Color::rgb_u8(241, 246, 255).into(),
-                    ..default()
-                })
+                .spawn_bundle(menu_bar)
                 .with_children(|parent| {
-                    // File button
                     parent
-                        .spawn_bundle(ButtonBundle {
-                            style: Style {
-                                size: Size::new(Val::Auto, Val::Auto),
-                                justify_content: JustifyContent::Center,
-                                align_items: AlignItems::Center,
-                                ..default()
-                            },
-                            color: Color::NONE.into(),
-                            ..default()
-                        })
+                        .spawn_bundle(file_button)
                         .with_children(|parent| {
-                            // File button text
-                            parent.spawn_bundle(TextBundle::from_section(
-                                "File", 
-                                TextStyle {
-                                    font: font_handle.clone(),
-                                    font_size: 20.0,
-                                    color: Color::rgb_u8(26, 24, 36)
-                                }
-                            ));
-                            // File button dropdown
+                            parent.spawn_bundle(file_button_text);
                             parent
-                                .spawn_bundle(NodeBundle {
-                                    style: Style {
-                                        justify_content: JustifyContent::FlexStart,
-                                        position_type: PositionType::Absolute,
-                                        position: UiRect {
-                                            left: Val::Px(0.0),
-                                            top: Val::Px(22.0),
-                                            ..default()
-                                        },
-                                        size: Size::new(Val::Auto, Val::Auto),
-                                        ..default()
-                                    },
-                                    color: Color::rgb_u8(171, 177, 179).into(),
-                                    visibility: Visibility { is_visible: false },
-                                    ..default()
-                                })
+                                .spawn_bundle(file_button_dropdown)
                                 .insert(Dropdown::Inactive)
                                 .with_children(|parent| {
-                                    // Exit button
                                     parent
-                                        .spawn_bundle(ButtonBundle {
-                                            style: Style {
-                                                size: Size::new(Val::Auto, Val::Auto),
-                                                justify_content: JustifyContent::Center,
-                                                align_items: AlignItems::Center,
-                                                ..default()
-                                            },
-                                            color: Color::NONE.into(),
-                                            ..default()
-                                        })
-                                        .insert(ExitButton)
+                                        .spawn_bundle(exit_button)
                                         .with_children(|parent| {
-                                            // Exit button text
-                                            parent.spawn_bundle(TextBundle::from_section(
-                                                "Exit", 
-                                                TextStyle {
-                                                    font: font_handle.clone(),
-                                                    font_size: 20.0,
-                                                    color: Color::rgb_u8(26, 24, 36)
-                                                }
-                                            ));
+                                            parent.spawn_bundle(exit_button_text);
                                         });
                                 });
                         });
@@ -157,42 +159,31 @@ fn update_dropdowns(
     }
 }
 
-// All button interactions that change the button itself or any child entities are processed here.
 fn process_button_interaction(
     mut interaction_query: Query<
-        (&Interaction, &Children),
-        (Changed<Interaction>, With<Button>),
+        (&Interaction, &UIName, &Children),
+        (Changed<Interaction>, With<UIButton>),
     >,
     mut dropdown_query: Query<(&mut Visibility, &mut Dropdown)>,
-) {
-    for (interaction, children) in &mut interaction_query {
-        match *interaction {
-            Interaction::Clicked => {
-                for child in children {
-                    // Change the visibility of a dropdown, if the button has one as a child.
-                    if let Ok(mut dropdown) = dropdown_query.get_mut(*child) {
-                        dropdown.0.is_visible = true;
-                        *dropdown.1 = Dropdown::JustActivated;
-                    }
-                }
-            }
-            Interaction::Hovered => {}
-            Interaction::None => {}
-        }
-    }
-}
-
-// Checks if any button with the ExitButton component was clicked.
-fn process_exit_button_interaction(
-    mut interaction_query: Query<
-        &Interaction,
-        (Changed<Interaction>, With<ExitButton>),
-    >,
     mut exit: EventWriter<AppExit>
 ) {
-    for interaction in &mut interaction_query {
+    for (interaction, ui_name, children) in &mut interaction_query {
         match *interaction {
-            Interaction::Clicked => { exit.send(AppExit); }
+            Interaction::Clicked => {
+                match ui_name.name.as_str() {
+                    "dropdown" => {
+                        for child in children {
+                            // Change the visibility of a dropdown, if the button has one as a child.
+                            if let Ok(mut dropdown) = dropdown_query.get_mut(*child) {
+                                dropdown.0.is_visible = true;
+                                *dropdown.1 = Dropdown::JustActivated;
+                            }
+                        }
+                    }
+                    "exit" => { exit.send(AppExit); },
+                    _ => {}
+                }
+            }
             Interaction::Hovered => {}
             Interaction::None => {}
         }
