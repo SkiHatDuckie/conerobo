@@ -2,8 +2,8 @@ use bevy::prelude::*;
 
 use crate::utils::{Dropdown, UIButtonBundle, UIName};
 
-pub fn spawn_branch(parent: &mut ChildBuilder, font_handle: Handle<Font>) {
-    // UI Entities
+pub fn spawn_branch(parent: &mut ChildBuilder, font_handle: &Handle<Font>) {
+    // UI entities
     let menu_bar = NodeBundle {
         style: Style {
             justify_content: JustifyContent::FlexStart,
