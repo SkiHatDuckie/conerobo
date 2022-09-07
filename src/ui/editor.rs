@@ -10,6 +10,7 @@ pub fn spawn_branch(parent: &mut ChildBuilder, font_handle: &Handle<Font>) {
     // UI entities
     let editor_surface = NodeBundle {
         style: Style {
+            flex_direction: FlexDirection::ColumnReverse,
             size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
             position_type: PositionType::Absolute,
             position: UiRect {
@@ -25,6 +26,8 @@ pub fn spawn_branch(parent: &mut ChildBuilder, font_handle: &Handle<Font>) {
     let textbox_surface = TextInputBundle {
         style: Style {
             flex_direction: FlexDirection::ColumnReverse,
+            align_content: AlignContent::FlexStart,
+            align_items: AlignItems::FlexStart,
             size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
             position_type: PositionType::Absolute,
             position: UiRect {
