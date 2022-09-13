@@ -8,7 +8,7 @@ impl Plugin for InputPlugin {
     fn build(&self, app: &mut App) {
         app
             .add_system(process_button_interaction)
-            .add_system(update_focus.before(process_button_interaction))
+            .add_system(update_widget_focus.before(process_button_interaction))
             .add_system(update_dropdowns.after(process_button_interaction));
     }
 }
@@ -68,7 +68,7 @@ fn update_dropdowns(
     }
 }
 
-fn update_focus(
+fn update_widget_focus(
     windows: Res<Windows>,
     buttons: Res<Input<MouseButton>>,
     mut focus_query: Query<(&mut Focus, &Node, &Transform)>
@@ -91,4 +91,8 @@ fn update_focus(
             });
         }
     }
+}
+
+fn process_keypress(keys: Res<Input<KeyCode>>) {
+    if keys.just_pressed(KeyCode::)
 }

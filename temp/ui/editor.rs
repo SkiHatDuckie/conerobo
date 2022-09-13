@@ -82,3 +82,11 @@ pub fn update_textbox_on_focus(
         });
     } 
 }
+
+fn update_textbox_text() {
+    // TODO
+}
+
+fn render_textbox_cursor() {
+    // TODO
+}
