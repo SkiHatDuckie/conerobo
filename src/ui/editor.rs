@@ -69,7 +69,7 @@ pub fn update_textbox_on_focus(
     mut textbox_query: Query<(&mut CharVector, &Focus), (Changed<Focus>, With<TextInput>)>,
     mut text_query: Query<&mut Text, With<TextboxText>>
 ) {
-    textbox_query.for_each_mut(|(mut char_vec, focus)| {
+    if let Ok((mut char_vec, focus)) = textbox_query.get_single_mut() {
         let mut msg: Vec<char> = match focus.is_focused {
             true => "Focused!".chars().collect(),
             false => "Unfocused".chars().collect()
@@ -80,5 +80,5 @@ pub fn update_textbox_on_focus(
         text_query.for_each_mut(|mut text| {
             text.sections[0].value = char_vec.text.iter().collect::<String>();
         });
-    });
+    } 
 }

@@ -82,7 +82,7 @@ fn update_focus(
                 // Set focusable widgets to false by default.
                 focus.is_focused = false;
 
-                if _position.x >= transform.translation.x 
+                if _position.x >= transform.translation.x
                    && _position.x <= transform.translation.x + node_size.size.x
                    && _position.y >= transform.translation.y
                    && _position.y <= transform.translation.y + node_size.size.y {
