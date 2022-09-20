@@ -34,8 +34,10 @@ pub fn Document<'a>(cx: Scope, h1_color: &'a str, h2_color: &'a str) -> Element 
             ul {
                 todo_list
             }
-            p {
-                "Link to the ConeRobo github page: "
+            a {
+                href: "https://github.com/SkiHatDuckie/conerobo",
+                target: "_blank",
+                "Link to the ConeRobo github page"
             }
         }
     ))
