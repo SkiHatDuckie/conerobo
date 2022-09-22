@@ -12,6 +12,7 @@ mod navigation_bar;
 
 fn App(cx: Scope) -> Element {
     cx.render(rsx! {
+        navigation_bar::NavigationBar {}
         welcome_screen::WelcomeScreen {
             h1_color: "rgb(200, 160, 70)",
             h2_color: "rgb(50, 70, 200)"
