@@ -2,13 +2,15 @@
 // ^ Dioxus components use UpperCammelCase 
 
 use dioxus::prelude::*;
-
-mod file;
+use crate::welcome_screen;
 
 pub fn NavigationBar(cx: Scope) -> Element {
-    let active_dropdown = use_state(&cx, || 0);
-    let dropdown = match active_dropdown.get() {
-        1 => { rsx!( file::Dropdown {} ) },
+    let active_screen = use_state(&cx, || 0);
+    let screen = match active_screen.get() {
+        1 => { rsx!( welcome_screen::WelcomeScreen {
+            h1_color: "rgb(200, 160, 70)",
+            h2_color: "rgb(50, 70, 200)"
+            })},
         _ => { rsx!( div {} ) }
     };
 
@@ -16,16 +18,16 @@ pub fn NavigationBar(cx: Scope) -> Element {
         div {
             button {
                 onclick: move |_| {
-                    match active_dropdown.get() {
-                        1 => active_dropdown.set(0),
-                        _ => active_dropdown.set(1)
+                    match active_screen.get() {
+                        1 => active_screen.set(0),
+                        _ => active_screen.set(1)
                     }
                 },
-                "File"
+                "Welcome!"
             }
         }
         div {
-            dropdown
+            screen
         }
     ))
 }
