@@ -3,16 +3,19 @@
 
 use dioxus::prelude::*;
 
-// The lifetime `'a` ensures that the screen's members exist
 #[inline_props]
-pub fn EditorScreen<'a>(cx: Scope<'a>, h1_color: &'a str, h2_color: &'a str) -> Element {
-    cx.render(rsx! {
+pub fn EditorScreen(cx: Scope, text: UseRef<String>) -> Element {
+    let inner_text = &*text.read();
+
+    cx.render(rsx! (
         div {
             textarea {
                 rows: "1",
                 cols: "50",
-                resize: "none"
+                resize: "none",
+                oninput: move |evt| text.set(evt.value.clone()),
+                "{inner_text}"
             }
         }
-    })
+    ))
 }
