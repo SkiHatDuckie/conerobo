@@ -5,17 +5,12 @@ use dioxus::prelude::*;
 
 mod document;
 
-#[derive(Props, PartialEq)]
-pub struct WelcomeScreenProps<'a> {
-    h1_color: &'a str,
-    h2_color: &'a str
-}
-
-// The lifetime `'a` ensures that the `WelcomeScreenProps` members exist
-pub fn WelcomeScreen<'a>(cx: Scope<'a, WelcomeScreenProps<'a>>) -> Element {
+// The lifetime `'a` ensures that the screen's members exist
+#[inline_props]
+pub fn WelcomeScreen<'a>(cx: Scope<'a>, h1_color: &'a str, h2_color: &'a str) -> Element {
     cx.render(rsx! {
         div {
-            document::Document { h1_color: cx.props.h1_color, h2_color: cx.props.h2_color }
+            document::Document { h1_color: h1_color, h2_color: h2_color }
         }
     })
 }

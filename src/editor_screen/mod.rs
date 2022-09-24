@@ -3,14 +3,9 @@
 
 use dioxus::prelude::*;
 
-#[derive(Props, PartialEq)]
-pub struct EditorProps<'a> {
-    h1_color: &'a str,
-    h2_color: &'a str
-}
-
-// The lifetime `'a` ensures that the `EditorProps` members exist
-pub fn EditorScreen<'a>(cx: Scope<'a, EditorProps<'a>>) -> Element {
+// The lifetime `'a` ensures that the screen's members exist
+#[inline_props]
+pub fn EditorScreen<'a>(cx: Scope<'a>, h1_color: &'a str, h2_color: &'a str) -> Element {
     cx.render(rsx! {
         div {
             textarea {
