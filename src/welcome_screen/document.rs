@@ -8,7 +8,6 @@ use dioxus::prelude::*;
 pub fn Document<'a>(cx: Scope, h1_color: &'a str, h2_color: &'a str) -> Element {
     let todo_list_entries = [
         "Get comfortable with Dioxus (the library I'm using to make this GUI)",
-        "Create a navigation bar for GUI",
         "Add more information to the welcome screen (what you're looking at right now)",
         "Create a barebones IDE for basic text editing",
         "Keep codebase clean and simple whenever possible"
