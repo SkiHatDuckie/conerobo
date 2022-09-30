@@ -13,15 +13,12 @@ pub fn NavigationBar(cx: Scope) -> Element {
     let editor_num_rows = use_state(&cx, || 1);
 
     let screen = match active_screen.get() {
-        1 => { rsx!(welcome_screen::WelcomeScreen {
-                h1_color: "rgb(200, 160, 70)",
-                h2_color: "rgb(50, 70, 200)"
-        })},
-        2 => { rsx!( editor_screen::EditorScreen {
+        1 => { rsx!(welcome_screen::WelcomeScreen {}) },
+        2 => { rsx!(editor_screen::EditorScreen {
             text: editor_text.clone(),
             num_rows: editor_num_rows.clone()
         })},
-        _ => { rsx!( div {} ) }
+        _ => { rsx!(div {}) }
     };
 
     cx.render(rsx! (

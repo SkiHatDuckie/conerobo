@@ -8,20 +8,18 @@ pub fn EditorScreen(cx: Scope, text: UseRef<String>, num_rows: UseState<u32>) ->
     let inner_text = &*text.read();
     
     cx.render(rsx! (
-        div {
+        div { class: "editor",
             LineNumbers { num_rows: num_rows.clone() }
             textarea {
                 value: "{inner_text}",
                 rows: "{num_rows}",
-                cols: "50",
-                resize: "none",
                 onkeydown: move |evt| {
                     match evt.key.as_str() {
                         "Enter" => num_rows.modify(|n| n + 1),
                         "Backspace" => {
                             text.with(|i| {
                                 let lines: Vec<&str> = i.split('\n').collect::<Vec<&str>>();
-                                if lines[lines.len() - 1] == "" {
+                                if lines[lines.len() - 1] == "" && lines.len() > 1 {
                                     num_rows.modify(|n| n - 1)
                                 }
                             })
@@ -40,8 +38,7 @@ fn LineNumbers(cx: Scope, num_rows: UseState<u32>) -> Element {
     let numbered_lines = (1..=*num_rows.get()).map(|_| rsx!(span {}));
 
     cx.render(rsx! (
-        div {
-            class: "line-numbers",
+        div { class: "line-numbers",
             numbered_lines
         }
     ))
