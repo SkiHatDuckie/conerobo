@@ -9,6 +9,7 @@ pub fn EditorScreen(cx: Scope, text: UseRef<String>, num_rows: UseState<u32>) ->
     
     cx.render(rsx! (
         div {
+            LineNumbers { num_rows: num_rows.clone() }
             textarea {
                 value: "{inner_text}",
                 rows: "{num_rows}",
@@ -30,6 +31,18 @@ pub fn EditorScreen(cx: Scope, text: UseRef<String>, num_rows: UseState<u32>) ->
                 },
                 oninput: move |evt| text.set(evt.value.clone()),
             }
+        }
+    ))
+}
+
+#[inline_props]
+fn LineNumbers(cx: Scope, num_rows: UseState<u32>) -> Element {
+    let numbered_lines = (1..=*num_rows.get()).map(|_| rsx!(span {}));
+
+    cx.render(rsx! (
+        div {
+            class: "line-numbers",
+            numbered_lines
         }
     ))
 }
