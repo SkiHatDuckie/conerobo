@@ -1,30 +1,31 @@
 .editor {
     display: inline-flex;
+    width: 100%;
     gap: 10px;
     font-family: monospace;
     line-height: 21px;
-    background: #282a3a;
+    background: #e0e0e0;
     border-radius: 2px;
     padding: 20px 10px;
 }
 
 h1 {
-    color: #C8A059
+    color: #e6a73b
 }
 
 h2 {
-    color: #3659C8
+    color: #4069c9
 }
 
 textarea {
-    columns: 50;
     line-height: 21px;
+    overflow-wrap: normal;
     overflow-y: hidden;
     padding: 0;
     border: 0;
-    background: #282a3a;
-    color: #FFF;
-    min-width: 500px;
+    background: #efefef;
+    color: rgb(72, 176, 202);
+    width: calc(100% - 50px);
     outline: none;
     resize: none;
 }
@@ -33,13 +34,13 @@ textarea {
     width: 20px;
     text-align: right;
 }
-  
+
 .line-numbers span {
     counter-increment: linenumber;
 }
-  
+
 .line-numbers span::before {
     content: counter(linenumber);
     display: block;
-    color: #506882;
+    color: #5889be;
 }
