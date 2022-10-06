@@ -20,6 +20,7 @@ will likely change over time. If anyone has suggestions or questions for me, ple
 tell me! [SkiHatDuckie@gmail.com]
 
 ## Current Task(s):
-- Experimenting and creating a prototype for a TUI.
-- Finalizing the list of major features that I want ConeRobo to be capable of doing.
+- Create a barebones GUI.
+- Documenting ConeRobo structure, tooling, inline code, design choices, basically eveything ConeRobo.
 - Determining the project structure of ConeRobo / how ConeRobo will function.
+- Loading, saving, and creating ConeRobo components.
