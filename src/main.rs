@@ -7,6 +7,7 @@ fn main() {
     dioxus::desktop::launch_cfg(App, |c| c.with_window(|w| w.with_title("ConeRobo")));
 }
 
+mod file_management;
 mod navigation_bar;
 mod welcome_screen;
 mod editor_screen;

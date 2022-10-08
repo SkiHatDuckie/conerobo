@@ -9,7 +9,7 @@ pub fn NavigationBar(cx: Scope) -> Element {
     let active_screen = use_state(&cx, || 0);
     // Temporarily storing the editor screen's states here.
     // Later on, I want to have some other component handle screen states when a screen isn't being rendered.
-    let editor_text = use_ref(&cx, || "Hello!".to_owned());
+    let editor_text = use_ref(&cx, || String::new());
     let editor_num_rows = use_state(&cx, || 1);
 
     let screen = match active_screen.get() {
