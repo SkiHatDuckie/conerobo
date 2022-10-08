@@ -1,3 +1,4 @@
 /target
-docs/*.pdf
-docs/*.gz
+/docs/ConeRobo-UserManual/*
+!docs/ConeRobo-UserManual/*.tex
+!docs/ConeRobo-UserManual/*.md
