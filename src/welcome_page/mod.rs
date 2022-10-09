@@ -5,7 +5,7 @@ use dioxus::prelude::*;
 
 mod document;
 
-pub fn WelcomeScreen(cx: Scope) -> Element {
+pub fn WelcomePage(cx: Scope) -> Element {
     cx.render(rsx! {
         div {
             document::Document {}

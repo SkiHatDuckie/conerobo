@@ -5,7 +5,7 @@ use dioxus::prelude::*;
 mod filebar;
 
 #[inline_props]
-pub fn EditorScreen(
+pub fn EditorPage(
     cx: Scope,
     text: UseRef<String>,
     num_rows: UseState<u32>,

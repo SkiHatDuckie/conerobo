@@ -9,8 +9,8 @@ fn main() {
 
 mod file_management;
 mod navigation_bar;
-mod welcome_screen;
-mod editor_screen;
+mod welcome_page;
+mod editor_page;
 
 fn App(cx: Scope) -> Element {
     cx.render(rsx! {
