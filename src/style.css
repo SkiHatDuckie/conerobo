@@ -30,6 +30,10 @@ textarea {
     resize: none;
 }
 
+.filename-input {
+    min-width: 200px;
+}
+
 .line-numbers {
     width: 20px;
     text-align: right;

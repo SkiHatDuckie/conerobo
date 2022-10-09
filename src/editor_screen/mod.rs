@@ -2,15 +2,25 @@
 // ^ Dioxus components use UpperCammelCase
 
 use dioxus::prelude::*;
-use crate::file_management;
+mod filebar;
 
 #[inline_props]
-pub fn EditorScreen(cx: Scope, text: UseRef<String>, num_rows: UseState<u32>) -> Element {
+pub fn EditorScreen(
+    cx: Scope,
+    text: UseRef<String>,
+    num_rows: UseState<u32>,
+    filename: UseRef<String>
+) -> Element {
     let inner_text = &*text.read();
     
     cx.render(rsx! (
-        div {
-            FileButtons { text: text.clone(), num_rows: num_rows.clone() }
+        div { class: "filebar",
+            filebar::FileButtons {
+                text: text.clone(),
+                num_rows: num_rows.clone(),
+                filename: filename.clone(),
+            }
+            filebar::FilenameInput { filename: filename.clone() }
         }
         div { class: "editor",
             LineNumbers { num_rows: num_rows.clone() }
@@ -32,37 +42,6 @@ pub fn EditorScreen(cx: Scope, text: UseRef<String>, num_rows: UseState<u32>) ->
                     }
                 },
                 oninput: move |evt| text.set(evt.value.clone()),
-            }
-        }
-    ))
-}
-
-// TODO: Add ability to set filename to save and load.
-// Since `text` is a shared reference, we need to ensure that it still exists before saving.
-// `testfile.py` is temporary.
-#[inline_props]
-fn FileButtons(cx: Scope, text: UseRef<String>, num_rows: UseState<u32>) -> Element {
-    cx.render(rsx! (
-        div { class: "file-buttons",
-            button {
-                onclick: move |_| {
-                    text.with(|txt| {
-                        file_management::save_file(
-                            "testfile.py".to_owned(), txt.clone()
-                        )
-                    })
-                },
-                "Save"
-            }
-            button {
-                onclick: move |_| {
-                    text.set(file_management::load_file("testfile.py".to_owned()));
-                    text.with(|txt| {
-                        let lines: Vec<&str> = txt.split('\n').collect::<Vec<&str>>();
-                        num_rows.set(lines.len() as u32);
-                    })
-                },
-                "Load"
             }
         }
     ))
