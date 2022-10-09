@@ -15,6 +15,8 @@ mod editor_page;
 fn App(cx: Scope) -> Element {
     cx.render(rsx! {
         style { [include_str!("./style.css")] }
-        navigation_bar::NavigationBar {}
+        body {
+            navigation_bar::NavigationBar {}
+        }
     })
 }

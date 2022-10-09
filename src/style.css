@@ -1,20 +1,40 @@
-.editor {
-    display: inline-flex;
-    width: 100%;
-    gap: 10px;
-    font-family: monospace;
-    line-height: 21px;
-    background: #e0e0e0;
-    border-radius: 2px;
-    padding: 20px 10px;
+@font-face {
+    font-family: "fishpx";
+    src: url("assets/fonts/fishpx-mono-v1-0.ttf");
+}
+
+body {
+    background-color: #171717;
 }
 
 h1 {
-    color: #e6a73b
+    color: #fcda52;
+    font-family: "fishpx";
 }
 
 h2 {
-    color: #4069c9
+    color: #709afc;
+    font-family: "fishpx";
+}
+
+p {
+    color: #f4f4f4;
+    font-family: "fishpx";
+}
+
+ul {
+    color: #f4f4f4;
+    font-family: "fishpx";
+}
+
+label {
+    color: #f4f4f4;
+    font-family: "fishpx";
+}
+
+a {
+    color: #eb94ff;
+    font-family: "fishpx";
 }
 
 textarea {
@@ -28,15 +48,29 @@ textarea {
     width: calc(100% - 50px);
     outline: none;
     resize: none;
+    font-family: "fishpx";
 }
 
-#filename-input {
+.editor {
+    display: inline-flex;
+    width: 100%;
+    gap: 10px;
+    font-family: "fishpx";
+    line-height: 21px;
+    background: #e0e0e0;
+    border-radius: 2px;
+    padding: 20px 10px;
+}
+
+.filename-input {
     min-width: 200px;
+    font-family: "fishpx";
 }
 
 .line-numbers {
     width: 20px;
     text-align: right;
+    font-family: "fishpx";
 }
 
 .line-numbers span {
