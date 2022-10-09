@@ -46,10 +46,10 @@ pub fn FilenameInput(cx: Scope, filename: UseRef<String>) -> Element {
     let inner_filename = &*filename.read();
 
     cx.render(rsx!(
-        label { class: "filename-label",
+        label { id: "filename-label",
             "File: "
         }
-        input { class: "filename-input",
+        input { id: "filename-input",
             value: "{inner_filename}",
             oninput: move |evt| { filename.set(evt.value.clone()) }
         }

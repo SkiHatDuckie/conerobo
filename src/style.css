@@ -30,7 +30,7 @@ textarea {
     resize: none;
 }
 
-.filename-input {
+#filename-input {
     min-width: 200px;
 }
 
