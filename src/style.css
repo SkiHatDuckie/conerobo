@@ -1,6 +1,6 @@
 @font-face {
     font-family: "fishpx";
-    src: url("assets/fonts/fishpx-mono-v1-0.ttf");
+    src: url("assets/fonts/fishpx-mono-v1-1.ttf");
 }
 
 body {
@@ -48,6 +48,10 @@ textarea {
     width: calc(100% - 50px);
     outline: none;
     resize: none;
+    font-family: "fishpx";
+}
+
+button {
     font-family: "fishpx";
 }
 
