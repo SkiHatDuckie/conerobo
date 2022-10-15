@@ -4,7 +4,10 @@
 use dioxus::prelude::*;
 
 fn main() {
-    dioxus::desktop::launch_cfg(App, |c| c.with_window(|w| w.with_title("ConeRobo")));
+    dioxus::desktop::launch_cfg(
+        App, 
+        |config| config.with_custom_index(include_str!("./index.html").to_owned())
+    );
 }
 
 mod file_management;

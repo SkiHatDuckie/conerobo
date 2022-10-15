@@ -47,7 +47,7 @@ pub fn FilenameInput(cx: Scope, filename: UseRef<String>) -> Element {
 
     cx.render(rsx!(
         label { class: "filename-label",
-            "File: "
+            " File: "
         }
         input { class: "filename-input",
             value: "{inner_filename}",
