@@ -13,6 +13,9 @@ pub fn EditorPage(
     filename: UseRef<String>
 ) -> Element {
     cx.render(rsx! (
+        div {
+            p { "WARNING: The editor is currently bugged and unfinished for the time being." }
+        }
         div { class: "filebar",
             filebar::FileButtons {
                 text: text.clone(),
