@@ -24,3 +24,4 @@ tell me! [SkiHatDuckie@gmail.com]
 - Documenting ConeRobo structure, tooling, inline code, design choices, basically eveything ConeRobo.
 - Determining the project structure of ConeRobo / how ConeRobo will function.
 - Loading, saving, and creating ConeRobo components.
+- Learn Common Lisp, the language I chose to program component management in.
