@@ -5,11 +5,11 @@ use dioxus::prelude::*;
 
 pub fn Document(cx: Scope) -> Element {
     let todo_list_entries = [
-        "Get comfortable with Dioxus (the library I'm using to make this GUI)",
-        "Add more information to the welcome screen (what you're looking at right now)",
-        "Work on file management for the editor page",
-        "Figure out how to parse python code in the editor",
-        "Keep codebase clean and simple whenever possible"
+        "Update this welcome screen as needed",
+        "Figure out how ConeRobo Component management is gonna work",
+        "Create an API for making ConeRobo Components",
+        "Keep codebase clean and simple whenever possible",
+        "Learn Common Lisp (the language I chose for Component management",
     ];
     let todo_list = todo_list_entries.iter().map(|entry| rsx!(
         li { "{entry}" }

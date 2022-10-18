@@ -2,7 +2,7 @@
 // ^ Dioxus components use UpperCammelCase
 
 use dioxus::prelude::*;
-use crate::file_management;
+use super::super::file_management;
 
 #[inline_props]
 pub fn FileButtons(

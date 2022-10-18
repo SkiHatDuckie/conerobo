@@ -2,8 +2,8 @@
 // ^ Dioxus components use UpperCammelCase 
 
 use dioxus::prelude::*;
-use crate::welcome_page;
-use crate::editor_page;
+use super::welcome_page;
+use super::editor_page;
 
 pub fn NavigationBar(cx: Scope) -> Element {
     let active_screen = use_state(&cx, || 0);
