@@ -1,10 +1,11 @@
 use std::env;
 
 mod gui;
+mod tui;
 
 fn help() {
     println!("Usage:
-    cargo run conerobo [cmd] [args]
+    cargo run conerobo -- [cmd]
 
 Commands:
     --debug : Run ConeRobo in debug mode
@@ -16,12 +17,12 @@ fn main() {
 
     match args.len() {
         // No arguments passed
-        1 => gui::launch_gui(),
+        1 => run_conerobo(),
         // One argument passed
         2 => {
             let cmd = &args[1];
             match &cmd[..] {
-                "--debug" => {},
+                "--debug" => debug_conerobo(),
                 "--help" => help(),
                 _ => {
                     eprintln!("Error: Invalid command");
@@ -32,4 +33,12 @@ fn main() {
         // All other cases
         _ => help()
     }
+}
+
+fn run_conerobo() {
+    gui::launch_gui();
+}
+
+fn debug_conerobo() {
+    tui::launch_debug_interface();
 }
