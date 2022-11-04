@@ -40,5 +40,8 @@ fn run_conerobo() {
 }
 
 fn debug_conerobo() {
-    tui::launch_debug_interface();
+    match tui::launch_debug_interface() {
+        Ok(()) => {},
+        Err(err) => println!("An error occurred when trying to run the debug interface: {}", err)
+    }
 }

@@ -1,4 +1,16 @@
-use std::io::{self, Write};
+use crossterm::event::poll;
+use crossterm::{
+    self,
+    event::{
+        read, Event, KeyCode,
+    },
+    execute,
+    terminal::{disable_raw_mode, enable_raw_mode},
+};
+use std::{
+    io::stdout,
+    time::Duration,
+};
 
 #[derive(Clone)]
 enum MenuState {
@@ -7,16 +19,38 @@ enum MenuState {
     ComponentLaunch,
 }
 
-pub fn launch_debug_interface() {
-    let mut input = String::new();
+pub fn launch_debug_interface() -> crossterm::Result<()> {
+    enable_raw_mode()?;
+
+    let mut stdout = stdout();
+
+    execute!(stdout)?;
+
+    launch_tui();
+
+    execute!(stdout)?;
+
+    disable_raw_mode()
+}
+
+fn launch_tui() {
     let mut menu_state = MenuState::MainMenu;
-
     loop {
-        input.clear();
+        render_menu(&menu_state);
+        
+        match process_events(&mut menu_state) {
+            Ok(quit_attempt) => {
+                if quit_attempt { break }
+            },
+            Err(err) => println!("Error: {:?}\r", err)
+        }
+    }
+}
 
-        match menu_state {
-            MenuState::MainMenu => {
-                print!("\
+fn render_menu(state: &MenuState) {
+    match state {
+        MenuState::MainMenu => {
+            print!("\
 ============ ConeRobo Custom Launch ============
 Options:
     0 > Configure GUI Launch
@@ -26,63 +60,79 @@ Options:
     Q > Exit TUI
 ------------------------------------------------
 > ");
-            },
-            MenuState::GUILaunch => {
-                print!("\
+        },
+        MenuState::GUILaunch => {
+            print!("\
 ============= Customize GUI Launch =============
 Options:
     Q > Back to main menu
 ------------------------------------------------
 > ");
-            },
-            MenuState::ComponentLaunch => {
-                print!("\
+        },
+        MenuState::ComponentLaunch => {
+            print!("\
 ========== Customize Component Launch ==========
 Options:
     Q > Back to main menu
 ------------------------------------------------
 > ");
-            }
-        }
-
-        // We need to manually flush the stdout.
-        // This ensures that inputs appear on the same line as "> ".
-        match io::stdout().flush() {
-            Ok(()) => {},
-            Err(err) => println!("ConeRobo ERROR! Failed to flush stdout: {}", err)
-        }
-
-        match io::stdin().read_line(&mut input) {
-            Ok(_) => {
-                input = input.trim_end().to_owned();
-                let mut next_menu_state = menu_state.clone();
-                match menu_state {
-                    MenuState::MainMenu => {
-                        match input.as_str() {
-                            "0" => next_menu_state = MenuState::GUILaunch,
-                            "1" => next_menu_state = MenuState::ComponentLaunch,
-                            "2" => println!("Option unavailable"),
-                            "3" => println!("Option unavailable"),
-                            "Q" => break,
-                            _ => println!("Unknown command: '{}'", input)
-                        }
-                    },
-                    MenuState::GUILaunch => {
-                        match input.as_str() {
-                            "Q" => next_menu_state = MenuState::MainMenu,
-                            _ => println!("Unknown command: '{}'", input)
-                        }
-                    },
-                    MenuState::ComponentLaunch => {
-                        match input.as_str() {
-                            "Q" => next_menu_state = MenuState::MainMenu,
-                            _ => println!("Unknown command: '{}'", input)
-                        }
-                    }
-                }
-                menu_state = next_menu_state;
-            },
-            Err(err) => println!("ConeRobo ERROR! Failed to read input: {}", err)
         }
     }
+}
+
+// Returns true if a quit attempt was processed.
+fn process_events(state: &mut MenuState) -> crossterm::Result<bool> {
+    // Will block until an event is received.
+    match read()? {
+        Event::Key(event) => {
+            match state {
+                MenuState::MainMenu => {
+                    match event.code {
+                        KeyCode::Char('0') => *state = MenuState::GUILaunch,
+                        KeyCode::Char('1') => *state = MenuState::ComponentLaunch,
+                        KeyCode::Char('2') => println!("Option unavailable"),
+                        KeyCode::Char('3') => println!("Option unavailable"),
+                        KeyCode::Char('q') => return Ok(true),
+                        _ => println!("Unknown command: '{:?}\r'", event)
+                    }
+                },
+                MenuState::GUILaunch => {
+                    match event.code {
+                        KeyCode::Char('q') => *state = MenuState::MainMenu,
+                        _ => println!("Unknown command: '{:?}\r'", event)
+                    }
+                },
+                MenuState::ComponentLaunch => {
+                    match event.code {
+                        KeyCode::Char('q') => *state = MenuState::MainMenu,
+                        _ => println!("Unknown command: '{:?}\r'", event)
+                    }
+                }
+            }
+        },
+        Event::Resize(width, height) => {
+            let (original_size, new_size) = flush_resize_events((width, height));
+            println!("Resize from: {:?}, to: {:?}\r", original_size, new_size);
+        },
+        Event::FocusGained => {},
+        Event::FocusLost => {},
+        Event::Mouse(_event) => {},
+        Event::Paste(_event) => {}
+    }
+
+    Ok(false)
+}
+
+// Resize events can occur in batches.
+// With a simple loop they can be flushed.
+// This function will keep the first and last resize event.
+fn flush_resize_events(first_resize: (u16, u16)) -> ((u16, u16), (u16, u16)) {
+    let mut last_resize = first_resize;
+    while let Ok(true) = poll(Duration::from_millis(50)) {
+        if let Ok(Event::Resize(x, y)) = read() {
+            last_resize = (x, y);
+        }
+    }
+
+    return (first_resize, last_resize);
 }
