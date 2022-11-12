@@ -13,7 +13,7 @@ use std::{
 };
 
 mod menu;
-use menu::{MENUS, Menu, State};
+use menu::*;
 
 pub fn launch_debug_interface() -> crossterm::Result<()> {
     enable_raw_mode()?;
@@ -22,7 +22,7 @@ pub fn launch_debug_interface() -> crossterm::Result<()> {
 }
 
 fn launch_tui(stdout: &mut Stdout) {
-    let mut curr_menu = MENUS[0].clone();
+    let mut curr_menu = MAIN_MENU.clone();
     let mut option_index = 0i32;
 
     loop {
@@ -46,7 +46,7 @@ fn display_menu(stdout: &mut Stdout, curr_menu: &Menu, option_index: &i32) -> cr
         ResetColor
     )?;
 
-    for (i, s) in curr_menu.options.vec.iter().enumerate() {
+    for (i, s) in curr_menu.options.iter().enumerate() {
         if i == *option_index as usize {
             execute!(
                 stdout,
@@ -78,42 +78,25 @@ fn process_events(curr_menu: &mut Menu, option_index: &mut i32) -> crossterm::Re
         Event::Key(event) => {
             match event.code {
                 KeyCode::Up => *option_index = max(0, *option_index - 1),
-                KeyCode::Down => *option_index = min(curr_menu.options.vec.len() as i32 - 1, *option_index + 1),
+                KeyCode::Down => *option_index = min(curr_menu.options.len() as i32 - 1, *option_index + 1),
                 KeyCode::Enter => {
-                    match curr_menu.state {
-                        State::MainMenu => {
-                            match option_index {
-                                0 => {
-                                    *curr_menu = MENUS[1].clone();
+                    match curr_menu.actions.get(*option_index as usize) {
+                        Some(action) => {
+                            match action {
+                                Action::Unavailable => println!("Option unavailable"),
+                                Action::QuitAttempt => return Ok(true),
+                                Action::Navigation { next_menu } => {
+                                    *curr_menu = match next_menu {
+                                        MenuState::MainMenu => MAIN_MENU.clone(),
+                                        MenuState::GUILaunch => GUI_LAUNCH.clone(),
+                                        MenuState::ComponentLaunch => COMPONENT_LAUNCH.clone()
+                                    };
                                     *option_index = 0;
-                                },
-                                1 => {
-                                    *curr_menu = MENUS[2].clone();
-                                    *option_index = 0;
-                                },
-                                2 => println!("Option unavailable"),
-                                3 => println!("Option unavailable"),
-                                4 => return Ok(true),
-                                _ => {}
+                                }
                             }
-                        },
-                        State::GUILaunch => {
-                            match option_index {
-                                0 => {
-                                    *curr_menu = MENUS[0].clone();
-                                    *option_index = 0;
-                                },
-                                _ => {}
-                            }
-                        },
-                        State::ComponentLaunch => {
-                            match option_index {
-                                0 => {
-                                    *curr_menu = MENUS[0].clone();
-                                    *option_index = 0;
-                                },
-                                _ => {}
-                            }
+                        }
+                        None => {
+                            println!("CONEROBO ERROR: Option index out of bounds.")
                         }
                     }
                 },
