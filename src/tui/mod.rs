@@ -15,7 +15,7 @@ use std::{
 mod menu;
 use menu::*;
 
-pub fn launch_debug_interface() -> crossterm::Result<()> {
+pub fn launch_user_interface() -> crossterm::Result<()> {
     enable_raw_mode()?;
     launch_tui(&mut stdout());
     disable_raw_mode()

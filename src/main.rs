@@ -1,6 +1,5 @@
 use std::env;
 
-mod gui;
 mod tui;
 
 fn help() {
@@ -8,7 +7,6 @@ fn help() {
     cargo run conerobo -- [cmd]
 
 Commands:
-    --debug : Run ConeRobo in debug mode
     --help  : Show this menu");
 }
 
@@ -22,7 +20,6 @@ fn main() {
         2 => {
             let cmd = &args[1];
             match &cmd[..] {
-                "--debug" => debug_conerobo(),
                 "--help" => help(),
                 _ => {
                     eprintln!("Error: Invalid command");
@@ -36,11 +33,7 @@ fn main() {
 }
 
 fn run_conerobo() {
-    gui::launch_gui();
-}
-
-fn debug_conerobo() {
-    match tui::launch_debug_interface() {
+    match tui::launch_user_interface() {
         Ok(()) => {},
         Err(err) => println!("An error occurred when trying to run the debug interface: {}", err)
     }

@@ -1,5 +1,5 @@
 # ConeRobo
-An idea for an interesting approach to machine learning.
+An idea for an interesting approach to machine learning, robotics, automation, and all that fun stuff.
 
 Will Update this README as development continues. :]
 
@@ -20,8 +20,7 @@ will likely change over time. If anyone has suggestions or questions for me, ple
 tell me! [SkiHatDuckie@gmail.com]
 
 ## Current Task(s):
-- Create a barebones GUI.
+- Create a working TUI (will work on a GUI later, as I want to make testing new features fast and easy).
 - Documenting ConeRobo structure, tooling, inline code, design choices, basically eveything ConeRobo.
 - Determining the project structure of ConeRobo / how ConeRobo will function.
 - Loading, saving, and creating ConeRobo components.
-- Learn Common Lisp, the language I chose to program component management in.
