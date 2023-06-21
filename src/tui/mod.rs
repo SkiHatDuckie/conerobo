@@ -15,6 +15,34 @@ use std::{
 mod menu;
 use menu::*;
 
+// `Menu.state` must be unique for every `Menu` initialized.
+const MENUS: &[Menu] = &[
+    Menu {
+        title: "Main Menu",
+        state: MenuState(0),
+        options: &[
+            MenuOption {
+                option_str: "Component Menu",
+                action: Action::Navigation { next_menu: MenuState(1) }
+            },
+            MenuOption {
+                option_str: "Exit TUI",
+                action: Action::QuitAttempt
+            }
+        ]
+    },
+    Menu {
+        title: "Component Menu",
+        state: MenuState(1),
+        options: &[
+            MenuOption {
+                option_str: "Back to Main Menu",
+                action: Action::Navigation { next_menu: MenuState(0) }
+            },
+        ]
+    }
+];
+
 pub fn launch_user_interface() -> crossterm::Result<()> {
     enable_raw_mode()?;
     launch_tui(&mut stdout());
@@ -22,7 +50,7 @@ pub fn launch_user_interface() -> crossterm::Result<()> {
 }
 
 fn launch_tui(stdout: &mut Stdout) {
-    let mut curr_menu = MAIN_MENU.clone();
+    let mut curr_menu = MENUS[0].clone();
     let mut option_index = 0i32;
 
     loop {
@@ -37,7 +65,9 @@ fn launch_tui(stdout: &mut Stdout) {
     }
 }
 
-fn display_menu(stdout: &mut Stdout, curr_menu: &Menu, option_index: &i32) -> crossterm::Result<()> {
+fn display_menu(
+    stdout: &mut Stdout, curr_menu: &Menu, option_index: &i32
+) -> crossterm::Result<()> {
     execute!(
         stdout,
         SetForegroundColor(Color::Rgb { r: 227, g: 227, b: 227 }),
@@ -46,14 +76,14 @@ fn display_menu(stdout: &mut Stdout, curr_menu: &Menu, option_index: &i32) -> cr
         ResetColor
     )?;
 
-    for (i, s) in curr_menu.options.iter().enumerate() {
+    for (i, menu_option) in curr_menu.options.iter().enumerate() {
         if i == *option_index as usize {
             execute!(
                 stdout,
                 SetForegroundColor(Color::Rgb { r: 224, g: 210, b: 58 }),
                 Print("\t["),
                 SetForegroundColor(Color::Rgb { r: 227, g: 227, b: 227 }),
-                Print(s),
+                Print(menu_option.option_str),
                 SetForegroundColor(Color::Rgb { r: 224, g: 210, b: 58 }),
                 Print("]\n"),
                 ResetColor
@@ -62,7 +92,7 @@ fn display_menu(stdout: &mut Stdout, curr_menu: &Menu, option_index: &i32) -> cr
             execute!(
                 stdout,
                 SetForegroundColor(Color::Rgb { r: 50, g: 50, b: 50 }),
-                Print(format!("\t {s} \n")),
+                Print(format!("\t {}\n", menu_option.option_str)),
                 ResetColor
             )?;
         }
@@ -78,24 +108,26 @@ fn process_events(curr_menu: &mut Menu, option_index: &mut i32) -> crossterm::Re
         Event::Key(event) => {
             match event.code {
                 KeyCode::Up => *option_index = max(0, *option_index - 1),
-                KeyCode::Down => *option_index = min(curr_menu.options.len() as i32 - 1, *option_index + 1),
+                KeyCode::Down => *option_index = min(curr_menu.options.len() as i32 - 1,
+                                                     *option_index + 1),
                 KeyCode::Enter => {
-                    match curr_menu.actions.get(*option_index as usize) {
-                        Some(action) => {
-                            match action {
-                                Action::Unavailable => println!("Option unavailable"),
+                    match curr_menu.options.get(*option_index as usize) {
+                        Some(menu_option) => {
+                            match menu_option.action {
+                                // Action::Unavailable => println!("Option unavailable"),
                                 Action::QuitAttempt => return Ok(true),
                                 Action::Navigation { next_menu } => {
-                                    *curr_menu = match next_menu {
-                                        MenuState::MainMenu => MAIN_MENU.clone(),
-                                        MenuState::ComponentMenu => COMPONENT_MENU.clone()
+                                    match get_next_menu(next_menu) {
+                                        Some(menu) => *curr_menu = menu,
+                                        None => {}
                                     };
                                     *option_index = 0;
                                 }
                             }
                         }
                         None => {
-                            println!("CONEROBO ERROR: Option index out of bounds.")
+                            println!("CONEROBO ERROR: Menu option index \"{}\" out of bounds.",
+                                     option_index)
                         }
                     }
                 },
@@ -113,6 +145,18 @@ fn process_events(curr_menu: &mut Menu, option_index: &mut i32) -> crossterm::Re
     }
 
     Ok(false)
+}
+
+// Returns `None` if `next_menu` cannot be found.
+fn get_next_menu(next_menu: MenuState) -> Option<Menu> {
+    for menu in MENUS {
+        if menu.state == next_menu {
+            return Some(menu.clone())
+        }
+    };
+
+    println!("CONEROBO ERROR: Next menu \"{}\" does not exist.", next_menu.0);
+    None
 }
 
 // Resize events can occur in batches.
