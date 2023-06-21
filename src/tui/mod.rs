@@ -88,8 +88,7 @@ fn process_events(curr_menu: &mut Menu, option_index: &mut i32) -> crossterm::Re
                                 Action::Navigation { next_menu } => {
                                     *curr_menu = match next_menu {
                                         MenuState::MainMenu => MAIN_MENU.clone(),
-                                        MenuState::GUILaunch => GUI_LAUNCH.clone(),
-                                        MenuState::ComponentLaunch => COMPONENT_LAUNCH.clone()
+                                        MenuState::ComponentMenu => COMPONENT_MENU.clone()
                                     };
                                     *option_index = 0;
                                 }
