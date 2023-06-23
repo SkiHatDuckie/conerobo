@@ -1,3 +1,4 @@
+logs/*
 /target
 /docs/ConeRobo-UserManual/*
 !docs/ConeRobo-UserManual/*.tex

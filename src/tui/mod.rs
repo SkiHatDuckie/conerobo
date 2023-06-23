@@ -43,44 +43,67 @@ const MENUS: &[Menu] = &[
 ];
 
 pub fn launch_user_interface() -> crossterm::Result<()> {
+    log::info!("Launching TUI");
+    log::info!("Enabling raw mode...");
     enable_raw_mode()?;
-    launch_tui(&mut stdout());
-    disable_raw_mode()
-}
+    log::info!("Raw mode enabled");
 
-fn launch_tui(stdout: &mut Stdout) {
+    let mut stdout = stdout();
     let mut curr_menu = MENUS[0].clone();
     let mut option_index = 0i32;
 
-    match configure_terminal(stdout) {
-        Ok(()) => {},
-        Err(err) => println!("Error: {:?}\r", err)
+    log::info!("Configuring terminal...");
+    match configure_terminal(&mut stdout) {
+        Ok(()) => {
+            log::info!("Terminal configured");
+        },
+        Err(err) => {
+            log::error!("I001: Failed to configure terminal: {:?}", err);
+            return Err(err)
+        }
     }
 
+    log::info!("Entering main loop of TUI");
     loop {
-        match display_menu(stdout, &curr_menu, &option_index) {
+        match display_menu(&mut stdout, &curr_menu, &option_index) {
             Ok(()) => {},
-            Err(err) => println!("Error: {:?}\r", err)
+            Err(err) => {
+                log::error!("I002: Error while displaying menu: {:?}", err);
+                return Err(err)
+            }
         }
         match process_events(&mut curr_menu, &mut option_index) {
             Ok(quit_attempt) => if quit_attempt { break },
-            Err(err) => println!("Error: {:?}\r", err)
+            Err(err) => {
+                log::error!("I003: Error while processing events: {:?}", err);
+                return Err(err)
+            }
         }
     }
+    log::info!("Quit attempt received. Terminating TUI...");
+
+    log::info!("Disabling raw mode...");
+    disable_raw_mode()?;
+    log::info!("Raw mode disabled");
+
+    Ok(())
 }
 
 fn configure_terminal(stdout: &mut Stdout) -> crossterm::Result<()> {
-    crossterm::execute!(stdout, SetTitle("ConeRobo TUI"))?;
+    let title = "ConeRobo TUI";
+    log::info!("Setting terminal title to {}", title);
+    crossterm::execute!(stdout, SetTitle(title))?;
     Ok(())
 }
 
 fn display_menu(
     stdout: &mut Stdout, curr_menu: &Menu, option_index: &i32
 ) -> crossterm::Result<()> {
+    log::info!("Displaying menu");
+
     // Top border
-    // Unsure of what to do with this error, so using unwrap.
-    let terminal_width = terminal::size().unwrap().0;
-    let mut top_border = "=".repeat(max(terminal_width as usize - curr_menu.title.len() - 2, 0));
+    let terminal_width = terminal::size()?.0;
+    let mut top_border = "=".repeat(max(terminal_width as usize - curr_menu.title.len() - 3, 0));
     top_border.push_str(format!(" {} ", curr_menu.title).as_str());
     crossterm::queue!(
         stdout,
@@ -119,7 +142,7 @@ fn display_menu(
         }
     }
 
-    // Bottom/Message border
+    // Bottom/Message borders
     let message_border = "-".repeat(terminal_width as usize);
     let bottom_border = "=".repeat(terminal_width as usize);
     crossterm::queue!(
@@ -138,17 +161,26 @@ fn display_menu(
 // Returns true if a quit attempt was processed.
 fn process_events(curr_menu: &mut Menu, option_index: &mut i32) -> crossterm::Result<bool> {
     // Will block until an event is received.
+    log::info!("Waiting for event...");
     match read()? {
         Event::Key(event) => {
+            log::info!("Reading key event");
             match event.kind {
                 KeyEventKind::Press => {},
                 KeyEventKind::Repeat => {},
                 KeyEventKind::Release => {
                     match event.code {
-                        KeyCode::Up => *option_index = max(0, *option_index - 1),
-                        KeyCode::Down => *option_index = min(curr_menu.options.len() as i32 - 1,
-                                                             *option_index + 1),
+                        KeyCode::Up => {
+                            log::debug!("Up key released");
+                            *option_index = max(0, *option_index - 1);
+                        },
+                        KeyCode::Down => {
+                            log::debug!("Down key released");
+                            *option_index = min(curr_menu.options.len() as i32 - 1,
+                                                *option_index + 1)
+                        },
                         KeyCode::Enter => {
+                            log::debug!("Enter key released");
                             match curr_menu.options.get(*option_index as usize) {
                                 Some(menu_option) => {
                                     match menu_option.action {
@@ -164,9 +196,10 @@ fn process_events(curr_menu: &mut Menu, option_index: &mut i32) -> crossterm::Re
                                     }
                                 }
                                 None => {
-                                    println!("CONEROBO ERROR: Menu option index \"{}\" out of
-                                             bounds.",
-                                             option_index)
+                                    log::error!(
+                                        "I004: Menu option index \"{:?}\" out of bounds.",
+                                        option_index
+                                    )
                                 }
                             }
                         },
@@ -176,8 +209,9 @@ fn process_events(curr_menu: &mut Menu, option_index: &mut i32) -> crossterm::Re
             }
         },
         Event::Resize(width, height) => {
+            log::info!("Reading resize event");
             let (original_size, new_size) = flush_resize_events((width, height));
-            println!("Resize from: {:?}, to: {:?}\r", original_size, new_size);
+            log::debug!("Resized from: {:?}, to: {:?}\r", original_size, new_size);
         },
         Event::FocusGained => {},
         Event::FocusLost => {},
@@ -195,7 +229,7 @@ fn get_next_menu(next_menu: MenuState) -> Option<Menu> {
         }
     };
 
-    println!("CONEROBO ERROR: Next menu \"{}\" does not exist.", next_menu.0);
+    log::error!("I005: Next menu \"{}\" does not exist.", next_menu.0);
     None
 }
 
