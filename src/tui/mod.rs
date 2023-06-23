@@ -1,14 +1,13 @@
-use crossterm::event::poll;
 use crossterm::{
     self,
-    event::{read, Event, KeyCode},
-    execute,
-    style::{Print, SetForegroundColor, Color, ResetColor},
-    terminal::{disable_raw_mode, enable_raw_mode},
+    event::{Event, KeyCode, KeyEventKind, poll, read},
+    style::{Color, Print, ResetColor, SetForegroundColor},
+    terminal::{self, Clear, ClearType, disable_raw_mode, enable_raw_mode,
+               SetTitle},
 };
 use std::{
     cmp::{min, max},
-    io::{Stdout, stdout},
+    io::{Stdout, stdout, Write},
     time::Duration
 };
 
@@ -53,6 +52,11 @@ fn launch_tui(stdout: &mut Stdout) {
     let mut curr_menu = MENUS[0].clone();
     let mut option_index = 0i32;
 
+    match configure_terminal(stdout) {
+        Ok(()) => {},
+        Err(err) => println!("Error: {:?}\r", err)
+    }
+
     loop {
         match display_menu(stdout, &curr_menu, &option_index) {
             Ok(()) => {},
@@ -65,20 +69,37 @@ fn launch_tui(stdout: &mut Stdout) {
     }
 }
 
+fn configure_terminal(stdout: &mut Stdout) -> crossterm::Result<()> {
+    crossterm::execute!(stdout, SetTitle("ConeRobo TUI"))?;
+    Ok(())
+}
+
 fn display_menu(
     stdout: &mut Stdout, curr_menu: &Menu, option_index: &i32
 ) -> crossterm::Result<()> {
-    execute!(
+    // Top border
+    // Unsure of what to do with this error, so using unwrap.
+    let terminal_width = terminal::size().unwrap().0;
+    let mut top_border = "=".repeat(max(terminal_width as usize - curr_menu.title.len() - 2, 0));
+    top_border.push_str(format!(" {} ", curr_menu.title).as_str());
+    crossterm::queue!(
         stdout,
+        Clear(ClearType::All),
         SetForegroundColor(Color::Rgb { r: 227, g: 227, b: 227 }),
-        Print("============ ConeRobo Custom Launch ============\n"),
-        Print("Options:\n"),
+        Print(top_border + "\n"),
         ResetColor
     )?;
 
+    // Options
+    crossterm::queue!(
+        stdout,
+        SetForegroundColor(Color::Rgb { r: 227, g: 227, b: 227 }),
+        Print("Options:\n"),
+        ResetColor
+    )?;
     for (i, menu_option) in curr_menu.options.iter().enumerate() {
         if i == *option_index as usize {
-            execute!(
+            crossterm::queue!(
                 stdout,
                 SetForegroundColor(Color::Rgb { r: 224, g: 210, b: 58 }),
                 Print("\t["),
@@ -89,7 +110,7 @@ fn display_menu(
                 ResetColor
             )?;
         } else {
-            execute!(
+            crossterm::queue!(
                 stdout,
                 SetForegroundColor(Color::Rgb { r: 50, g: 50, b: 50 }),
                 Print(format!("\t {}\n", menu_option.option_str)),
@@ -98,6 +119,19 @@ fn display_menu(
         }
     }
 
+    // Bottom/Message border
+    let message_border = "-".repeat(terminal_width as usize);
+    let bottom_border = "=".repeat(terminal_width as usize);
+    crossterm::queue!(
+        stdout,
+        SetForegroundColor(Color::Rgb { r: 227, g: 227, b: 227 }),
+        Print(message_border + "\n"),
+        Print("\n"),
+        Print(bottom_border),
+        ResetColor
+    )?;
+
+    stdout.flush()?;
     Ok(())
 }
 
@@ -106,32 +140,39 @@ fn process_events(curr_menu: &mut Menu, option_index: &mut i32) -> crossterm::Re
     // Will block until an event is received.
     match read()? {
         Event::Key(event) => {
-            match event.code {
-                KeyCode::Up => *option_index = max(0, *option_index - 1),
-                KeyCode::Down => *option_index = min(curr_menu.options.len() as i32 - 1,
-                                                     *option_index + 1),
-                KeyCode::Enter => {
-                    match curr_menu.options.get(*option_index as usize) {
-                        Some(menu_option) => {
-                            match menu_option.action {
-                                // Action::Unavailable => println!("Option unavailable"),
-                                Action::QuitAttempt => return Ok(true),
-                                Action::Navigation { next_menu } => {
-                                    match get_next_menu(next_menu) {
-                                        Some(menu) => *curr_menu = menu,
-                                        None => {}
-                                    };
-                                    *option_index = 0;
+            match event.kind {
+                KeyEventKind::Press => {},
+                KeyEventKind::Repeat => {},
+                KeyEventKind::Release => {
+                    match event.code {
+                        KeyCode::Up => *option_index = max(0, *option_index - 1),
+                        KeyCode::Down => *option_index = min(curr_menu.options.len() as i32 - 1,
+                                                             *option_index + 1),
+                        KeyCode::Enter => {
+                            match curr_menu.options.get(*option_index as usize) {
+                                Some(menu_option) => {
+                                    match menu_option.action {
+                                        // Action::Unavailable => println!("Option unavailable"),
+                                        Action::QuitAttempt => return Ok(true),
+                                        Action::Navigation { next_menu } => {
+                                            match get_next_menu(next_menu) {
+                                                Some(menu) => *curr_menu = menu,
+                                                None => {}
+                                            };
+                                            *option_index = 0;
+                                        }
+                                    }
+                                }
+                                None => {
+                                    println!("CONEROBO ERROR: Menu option index \"{}\" out of
+                                             bounds.",
+                                             option_index)
                                 }
                             }
-                        }
-                        None => {
-                            println!("CONEROBO ERROR: Menu option index \"{}\" out of bounds.",
-                                     option_index)
-                        }
+                        },
+                        _ => {}
                     }
-                },
-                _ => {}
+                }
             }
         },
         Event::Resize(width, height) => {
@@ -147,7 +188,6 @@ fn process_events(curr_menu: &mut Menu, option_index: &mut i32) -> crossterm::Re
     Ok(false)
 }
 
-// Returns `None` if `next_menu` cannot be found.
 fn get_next_menu(next_menu: MenuState) -> Option<Menu> {
     for menu in MENUS {
         if menu.state == next_menu {
@@ -170,5 +210,5 @@ fn flush_resize_events(first_resize: (u16, u16)) -> ((u16, u16), (u16, u16)) {
         }
     }
 
-    return (first_resize, last_resize);
+    (first_resize, last_resize)
 }
