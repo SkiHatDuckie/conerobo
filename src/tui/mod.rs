@@ -2,8 +2,7 @@ use crossterm::{
     self,
     event::{Event, KeyCode, KeyEventKind, poll, read},
     style::{Color, Print, ResetColor, SetForegroundColor},
-    terminal::{self, Clear, ClearType, disable_raw_mode, enable_raw_mode,
-               SetTitle},
+    terminal::{self, Clear, ClearType, SetTitle},
 };
 use std::{
     cmp::{min, max},
@@ -13,6 +12,8 @@ use std::{
 
 mod menu;
 use menu::*;
+mod raw_mode_guard;
+use raw_mode_guard::*;
 
 // `Menu.state` must be unique for every `Menu` initialized.
 const MENUS: &[Menu] = &[
@@ -43,9 +44,8 @@ const MENUS: &[Menu] = &[
 ];
 
 pub fn launch_user_interface() -> crossterm::Result<()> {
-    log::info!("Launching TUI");
     log::info!("Enabling raw mode...");
-    enable_raw_mode()?;
+    let _raw_mode_guard = RawModeGuard::new()?;
     log::info!("Raw mode enabled");
 
     let mut stdout = stdout();
@@ -80,12 +80,8 @@ pub fn launch_user_interface() -> crossterm::Result<()> {
             }
         }
     }
+
     log::info!("Quit attempt received. Terminating TUI...");
-
-    log::info!("Disabling raw mode...");
-    disable_raw_mode()?;
-    log::info!("Raw mode disabled");
-
     Ok(())
 }
 
