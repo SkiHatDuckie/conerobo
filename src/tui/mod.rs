@@ -6,14 +6,17 @@ use crossterm::{
 };
 use std::{
     cmp::{min, max},
-    io::{Stdout, stdout, Write},
+    io::{self, Stdout, stdout, Write},
     time::Duration
 };
 
+use crate::error::Result;
 mod menu;
 use menu::*;
 mod raw_mode_guard;
 use raw_mode_guard::*;
+mod util;
+use util::get_terminal_width;
 
 // `Menu.state` must be unique for every `Menu` initialized.
 const MENUS: &[Menu] = &[
@@ -43,7 +46,7 @@ const MENUS: &[Menu] = &[
     }
 ];
 
-pub fn launch_user_interface() -> crossterm::Result<()> {
+pub fn launch_user_interface() -> Result<()> {
     log::info!("Enabling raw mode...");
     let _raw_mode_guard = RawModeGuard::new()?;
     log::info!("Raw mode enabled");
@@ -53,31 +56,14 @@ pub fn launch_user_interface() -> crossterm::Result<()> {
     let mut option_index = 0i32;
 
     log::info!("Configuring terminal...");
-    match configure_terminal(&mut stdout) {
-        Ok(()) => {
-            log::info!("Terminal configured");
-        },
-        Err(err) => {
-            log::error!("I001: Failed to configure terminal: {:?}", err);
-            return Err(err)
-        }
-    }
+    configure_terminal(&mut stdout)?;
 
     log::info!("Entering main loop of TUI");
     loop {
-        match display_menu(&mut stdout, &curr_menu, &option_index) {
-            Ok(()) => {},
-            Err(err) => {
-                log::error!("I002: Error while displaying menu: {:?}", err);
-                return Err(err)
-            }
-        }
-        match process_events(&mut curr_menu, &mut option_index) {
-            Ok(quit_attempt) => if quit_attempt { break },
-            Err(err) => {
-                log::error!("I003: Error while processing events: {:?}", err);
-                return Err(err)
-            }
+        display_menu(&mut stdout, &curr_menu, &option_index)?;
+        let quit_attempt = process_events(&mut curr_menu, &mut option_index)?;
+        if quit_attempt {
+            break
         }
     }
 
@@ -85,7 +71,7 @@ pub fn launch_user_interface() -> crossterm::Result<()> {
     Ok(())
 }
 
-fn configure_terminal(stdout: &mut Stdout) -> crossterm::Result<()> {
+fn configure_terminal(stdout: &mut Stdout) -> io::Result<()> {
     let title = "ConeRobo TUI";
     log::info!("Setting terminal title to {}", title);
     crossterm::execute!(stdout, SetTitle(title))?;
@@ -94,16 +80,15 @@ fn configure_terminal(stdout: &mut Stdout) -> crossterm::Result<()> {
 
 fn display_menu(
     stdout: &mut Stdout, curr_menu: &Menu, option_index: &i32
-) -> crossterm::Result<()> {
+) -> io::Result<()> {
     log::info!("Displaying menu");
 
     // Top border
-    let terminal_width = terminal::size()?.0;
-    let mut top_border = "=".repeat(max(terminal_width as usize - curr_menu.title.len() - 3, 0));
-    top_border.push_str(format!(" {} ", curr_menu.title).as_str());
+    let top_border = create_top_border(curr_menu.title).unwrap();
     crossterm::queue!(
         stdout,
         Clear(ClearType::All),
+        terminal::SetSize(10, 10),  // test
         SetForegroundColor(Color::Rgb { r: 227, g: 227, b: 227 }),
         Print(top_border + "\n"),
         ResetColor
@@ -139,8 +124,8 @@ fn display_menu(
     }
 
     // Bottom/Message borders
-    let message_border = "-".repeat(terminal_width as usize);
-    let bottom_border = "=".repeat(terminal_width as usize);
+    let message_border = "-".repeat(get_terminal_width()? as usize);
+    let bottom_border = "=".repeat(get_terminal_width()? as usize);
     crossterm::queue!(
         stdout,
         SetForegroundColor(Color::Rgb { r: 227, g: 227, b: 227 }),
@@ -154,8 +139,18 @@ fn display_menu(
     Ok(())
 }
 
+fn create_top_border(title: &str) -> io::Result<String> {
+    let terminal_width = get_terminal_width()? as i32;
+    let padding = 2;
+    let title_width = title.len() as i32 + padding;
+    let mut top_border = "=".repeat(max((terminal_width - title_width) as usize, 0));
+    top_border.push_str(format!(" {} ", title).as_str());
+
+    Ok(top_border)
+}
+
 // Returns true if a quit attempt was processed.
-fn process_events(curr_menu: &mut Menu, option_index: &mut i32) -> crossterm::Result<bool> {
+fn process_events(curr_menu: &mut Menu, option_index: &mut i32) -> io::Result<bool> {
     // Will block until an event is received.
     log::info!("Waiting for event...");
     match read()? {

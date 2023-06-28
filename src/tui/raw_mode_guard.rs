@@ -1,9 +1,11 @@
 use crossterm::terminal;
 
+use crate::error::Result;
+
 // Ensures that raw mode is disabled in the scenario where the TUI crashes.
 pub struct RawModeGuard;
 impl RawModeGuard {
-    pub fn new() -> std::io::Result<Self> {
+    pub fn new() -> Result<Self> {
         terminal::enable_raw_mode()?;
         Ok(RawModeGuard)
     }

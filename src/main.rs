@@ -3,6 +3,7 @@ use log;
 
 use std::env;
 
+mod error;
 mod tui;
 
 fn main() -> Result<(), Box<dyn std::error::Error>>{
@@ -48,8 +49,8 @@ fn run_conerobo() {
     match tui::launch_user_interface() {
         Ok(()) => {},
         Err(err) => {
-            log::error!("I000: Fatal error while running TUI: {:?}", err);
-            println!("I000: Fatal error while running TUI. See log for details.")
+            log::error!("Fatal error while running TUI: {:?}", err);
+            println!("Fatal error while running TUI. See log for details.")
         }
     }
     log::info!("Terminated ConeRobo TUI");
