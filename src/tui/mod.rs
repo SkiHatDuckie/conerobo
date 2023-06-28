@@ -88,7 +88,6 @@ fn display_menu(
     crossterm::queue!(
         stdout,
         Clear(ClearType::All),
-        terminal::SetSize(10, 10),  // test
         SetForegroundColor(Color::Rgb { r: 227, g: 227, b: 227 }),
         Print(top_border + "\n"),
         ResetColor
