@@ -11,7 +11,6 @@ impl fmt::Display for ConeRoboError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             ConeRoboError::I0000(..) => {
-                log::error!("I-0000: Internal IO error.");
                 write!(f, "I-0000: Internal IO error occured. See log for details.")
             }
         }

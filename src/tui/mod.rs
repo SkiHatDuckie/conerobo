@@ -2,7 +2,7 @@ use crossterm::{
     self,
     event::{Event, KeyCode, KeyEventKind, poll, read},
     style::{Color, Print, ResetColor, SetForegroundColor},
-    terminal::{self, Clear, ClearType, SetTitle},
+    terminal::{Clear, ClearType, SetTitle},
 };
 use std::{
     cmp::{min, max},
