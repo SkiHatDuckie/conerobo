@@ -75,6 +75,7 @@ dependencies = [
  "crossterm",
  "flexi_logger",
  "log",
+ "thiserror",
 ]
 
 [[package]]

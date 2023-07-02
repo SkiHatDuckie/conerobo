@@ -49,6 +49,7 @@ fn run_conerobo() {
     tui::launch_user_interface()
         .map_err(|err| {
             log::error!("Fatal error while running TUI: {:?}", err);
+            err
         })
         .unwrap();
     log::info!("Terminated ConeRobo TUI");
