@@ -5,13 +5,19 @@ pub type Result<T> = std::result::Result<T, ConeRoboError>;
 
 pub enum ConeRoboError {
     I0000(std::io::Error),  // Catch-all IO Error
+    I0001(String),
+    I0002(String),
 }
 
 impl fmt::Display for ConeRoboError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
-            ConeRoboError::I0000(..) => {
-                write!(f, "I-0000: Internal IO error occured. See log for details.")
+            ConeRoboError::I0000(_) => {
+                write!(f, "I-0000: Internal IO error occured")
+            } ConeRoboError::I0001(ref e) => {
+                write!(f, "I-0001: Menu option index \"{0}\" out of bounds", e)
+            } ConeRoboError::I0002(ref e) => {
+                write!(f, "I-0002: Next menu \"{0}\" does not exist", e)
             }
         }
     }
@@ -39,13 +45,9 @@ fn error_chain_fmt(
 impl error::Error for ConeRoboError {
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         match *self {
-            ConeRoboError::I0000(ref err) => Some(err)
+            ConeRoboError::I0000(ref err) => Some(err),
+            ConeRoboError::I0001(_) => None,
+            ConeRoboError::I0002(_) => None
         }
-    }
-}
-
-impl From<std::io::Error> for ConeRoboError {
-    fn from(e: std::io::Error) -> Self {
-        Self::I0000(e)
     }
 }

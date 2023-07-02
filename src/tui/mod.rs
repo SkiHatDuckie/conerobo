@@ -10,7 +10,7 @@ use std::{
     time::Duration
 };
 
-use crate::error::Result;
+use crate::error::{ConeRoboError, Result};
 mod menu;
 use menu::*;
 mod raw_mode_guard;
@@ -56,11 +56,13 @@ pub fn launch_user_interface() -> Result<()> {
     let mut option_index = 0i32;
 
     log::info!("Configuring terminal...");
-    configure_terminal(&mut stdout)?;
+    configure_terminal(&mut stdout)
+        .map_err(ConeRoboError::I0000)?;
 
     log::info!("Entering main loop of TUI");
     loop {
-        display_menu(&mut stdout, &curr_menu, &option_index)?;
+        display_menu(&mut stdout, &curr_menu, &option_index)
+            .map_err(ConeRoboError::I0000)?;
         let quit_attempt = process_events(&mut curr_menu, &mut option_index)?;
         if quit_attempt {
             break
@@ -149,10 +151,10 @@ fn create_top_border(title: &str) -> io::Result<String> {
 }
 
 // Returns true if a quit attempt was processed.
-fn process_events(curr_menu: &mut Menu, option_index: &mut i32) -> io::Result<bool> {
-    // Will block until an event is received.
+// Potential errors include I0000, I0001, I0002.
+fn process_events(curr_menu: &mut Menu, option_index: &mut i32) -> Result<bool> {
     log::info!("Waiting for event...");
-    match read()? {
+    match read().map_err(ConeRoboError::I0000)? {
         Event::Key(event) => {
             log::info!("Reading key event");
             match event.kind {
@@ -177,19 +179,13 @@ fn process_events(curr_menu: &mut Menu, option_index: &mut i32) -> io::Result<bo
                                         // Action::Unavailable => println!("Option unavailable"),
                                         Action::QuitAttempt => return Ok(true),
                                         Action::Navigation { next_menu } => {
-                                            match get_next_menu(next_menu) {
-                                                Some(menu) => *curr_menu = menu,
-                                                None => {}
-                                            };
+                                            *curr_menu = get_next_menu(next_menu)?;
                                             *option_index = 0;
                                         }
                                     }
                                 }
                                 None => {
-                                    log::error!(
-                                        "I004: Menu option index \"{:?}\" out of bounds.",
-                                        option_index
-                                    )
+                                    return Err(ConeRoboError::I0001(option_index.to_string()))
                                 }
                             }
                         },
@@ -212,15 +208,14 @@ fn process_events(curr_menu: &mut Menu, option_index: &mut i32) -> io::Result<bo
     Ok(false)
 }
 
-fn get_next_menu(next_menu: MenuState) -> Option<Menu> {
+fn get_next_menu(next_menu: MenuState) -> Result<Menu> {
     for menu in MENUS {
         if menu.state == next_menu {
-            return Some(menu.clone())
+            return Ok(menu.clone())
         }
     };
 
-    log::error!("I005: Next menu \"{}\" does not exist.", next_menu.0);
-    None
+    Err(ConeRoboError::I0002(next_menu.0.to_string()))
 }
 
 // Resize events can occur in batches.

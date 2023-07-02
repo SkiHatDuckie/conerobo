@@ -1,12 +1,12 @@
 use crossterm::terminal;
 
-use crate::error::Result;
+use crate::error::{ConeRoboError, Result};
 
 // Ensures that raw mode is disabled in the scenario where the TUI crashes.
 pub struct RawModeGuard;
 impl RawModeGuard {
     pub fn new() -> Result<Self> {
-        terminal::enable_raw_mode()?;
+        terminal::enable_raw_mode().map_err(ConeRoboError::I0000)?;
         Ok(RawModeGuard)
     }
 }

@@ -46,12 +46,10 @@ Commands:
 
 fn run_conerobo() {
     log::info!("Running ConeRobo TUI");
-    match tui::launch_user_interface() {
-        Ok(()) => {},
-        Err(err) => {
+    tui::launch_user_interface()
+        .map_err(|err| {
             log::error!("Fatal error while running TUI: {:?}", err);
-            println!("Fatal error while running TUI. See log for details.")
-        }
-    }
+        })
+        .unwrap();
     log::info!("Terminated ConeRobo TUI");
 }
