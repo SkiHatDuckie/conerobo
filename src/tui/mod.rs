@@ -5,6 +5,7 @@ mod util;
 
 use crossterm::{
     self,
+    cursor::MoveToColumn,
     event::{Event, KeyCode, KeyEventKind, poll, read},
     style::{Color, Print, ResetColor, SetForegroundColor},
     terminal::{Clear, ClearType, SetTitle},
@@ -49,18 +50,16 @@ const MENUS: &[Menu] = &[
 ];
 
 pub fn launch_user_interface() -> Result<()> {
-    log::info!("Enabling raw mode...");
+    log::info!("Enabling raw mode");
     let _raw_mode_guard = RawModeGuard::new()?;
-    log::info!("Raw mode enabled");
 
     let mut stdout = stdout();
     let mut curr_menu = MENUS[0].clone();
     let mut option_index = 0i32;
 
-    log::info!("Configuring terminal...");
+    log::info!("Configuring terminal");
     configure_terminal(&mut stdout)
         .map_err(ConeRoboError::I0000)?;
-    log::info!("Terminal configured");
 
     log::info!("Entering main loop of TUI");
     loop {
@@ -80,6 +79,7 @@ fn configure_terminal(stdout: &mut Stdout) -> io::Result<()> {
     let title = "ConeRobo TUI";
     log::info!("Setting terminal title to {}", title);
     crossterm::execute!(stdout, SetTitle(title))?;
+    
     Ok(())
 }
 
@@ -94,6 +94,7 @@ fn display_menu(
     crossterm::queue!(
         stdout,
         Clear(ClearType::All),
+        MoveToColumn(0),
         SetForegroundColor(Color::Rgb { r: 227, g: 227, b: 227 }),
         Print(top_border + "\n"),
         ResetColor
