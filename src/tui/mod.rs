@@ -6,7 +6,8 @@ mod util;
 use crossterm::{
     self,
     cursor::MoveToColumn,
-    event::{Event, KeyCode, KeyEventKind, poll, read},
+    event::{DisableFocusChange, DisableMouseCapture, Event, KeyCode,
+            KeyEventKind, poll, read},
     style::{Color, Print, ResetColor, SetForegroundColor},
     terminal::{Clear, ClearType, SetTitle},
 };
@@ -78,8 +79,12 @@ pub fn launch_user_interface() -> Result<()> {
 fn configure_terminal(stdout: &mut Stdout) -> io::Result<()> {
     let title = "ConeRobo TUI";
     log::info!("Setting terminal title to {}", title);
-    crossterm::execute!(stdout, SetTitle(title))?;
-    
+    crossterm::execute!(
+        stdout,
+        DisableFocusChange,
+        DisableMouseCapture,
+        SetTitle(title)
+    )?;
     Ok(())
 }
 
