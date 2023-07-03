@@ -1,10 +1,9 @@
-use flexi_logger::{FileSpec, Logger, WriteMode};
-use log;
-
-use std::env;
-
 mod error;
 mod tui;
+
+use flexi_logger::{FileSpec, Logger, WriteMode};
+use log;
+use std::env;
 
 fn main() -> Result<(), Box<dyn std::error::Error>>{
     let _logger = Logger::try_with_str("debug")?

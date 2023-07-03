@@ -1,3 +1,8 @@
+mod display;
+mod menu;
+mod raw_mode_guard;
+mod util;
+
 use crossterm::{
     self,
     event::{Event, KeyCode, KeyEventKind, poll, read},
@@ -9,14 +14,11 @@ use std::{
     io::{self, Stdout, stdout, Write},
     time::Duration
 };
-
 use crate::error::{ConeRoboError, Result};
-mod menu;
+use display::*;
 use menu::*;
-mod raw_mode_guard;
 use raw_mode_guard::*;
-mod util;
-use util::get_terminal_width;
+
 
 // `Menu.state` must be unique for every `Menu` initialized.
 const MENUS: &[Menu] = &[
@@ -58,6 +60,7 @@ pub fn launch_user_interface() -> Result<()> {
     log::info!("Configuring terminal...");
     configure_terminal(&mut stdout)
         .map_err(ConeRoboError::I0000)?;
+    log::info!("Terminal configured");
 
     log::info!("Entering main loop of TUI");
     loop {
@@ -86,7 +89,8 @@ fn display_menu(
     log::info!("Displaying menu");
 
     // Top border
-    let top_border = create_top_border(curr_menu.title).unwrap();
+    let top_title = Title::Is(curr_menu.title.to_owned());
+    let top_border = create_border('=', top_title).unwrap();
     crossterm::queue!(
         stdout,
         Clear(ClearType::All),
@@ -125,8 +129,8 @@ fn display_menu(
     }
 
     // Bottom/Message borders
-    let message_border = "-".repeat(get_terminal_width()? as usize);
-    let bottom_border = "=".repeat(get_terminal_width()? as usize);
+    let message_border = create_border('-', Title::Empty).unwrap();
+    let bottom_border = create_border('=', Title::Empty).unwrap();
     crossterm::queue!(
         stdout,
         SetForegroundColor(Color::Rgb { r: 227, g: 227, b: 227 }),
@@ -138,16 +142,6 @@ fn display_menu(
 
     stdout.flush()?;
     Ok(())
-}
-
-fn create_top_border(title: &str) -> io::Result<String> {
-    let terminal_width = get_terminal_width()? as i32;
-    let padding = 2;
-    let title_width = title.len() as i32 + padding;
-    let mut top_border = "=".repeat(max((terminal_width - title_width) as usize, 0));
-    top_border.push_str(format!(" {} ", title).as_str());
-
-    Ok(top_border)
 }
 
 // Returns true if a quit attempt was processed.
