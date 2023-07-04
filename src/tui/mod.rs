@@ -6,8 +6,7 @@ mod util;
 use crossterm::{
     self,
     cursor::MoveToColumn,
-    event::{DisableFocusChange, DisableMouseCapture, Event, KeyCode,
-            KeyEventKind, poll, read},
+    event::{DisableFocusChange, Event, KeyCode, KeyEventKind, poll, read},
     style::{Color, Print, ResetColor, SetForegroundColor},
     terminal::{Clear, ClearType, SetTitle},
 };
@@ -21,41 +20,17 @@ use display::*;
 use menu::*;
 use raw_mode_guard::*;
 
-
-// `Menu.state` must be unique for every `Menu` initialized.
-const MENUS: &[Menu] = &[
-    Menu {
-        title: "Main Menu",
-        state: MenuState(0),
-        options: &[
-            MenuOption {
-                option_str: "Component Menu",
-                action: Action::Navigation { next_menu: MenuState(1) }
-            },
-            MenuOption {
-                option_str: "Exit TUI",
-                action: Action::QuitAttempt
-            }
-        ]
-    },
-    Menu {
-        title: "Component Menu",
-        state: MenuState(1),
-        options: &[
-            MenuOption {
-                option_str: "Back to Main Menu",
-                action: Action::Navigation { next_menu: MenuState(0) }
-            },
-        ]
-    }
-];
+const NUM_MENUS: usize = 2;
 
 pub fn launch_user_interface() -> Result<()> {
+    // `Menu.state` must be unique for every `Menu` initialized.
+    let menus = init_menus();
+
     log::info!("Enabling raw mode");
     let _raw_mode_guard = RawModeGuard::new()?;
 
     let mut stdout = stdout();
-    let mut curr_menu = MENUS[0].clone();
+    let mut curr_menu = menus[0].clone();
     let mut option_index = 0i32;
 
     log::info!("Configuring terminal");
@@ -66,7 +41,7 @@ pub fn launch_user_interface() -> Result<()> {
     loop {
         display_menu(&mut stdout, &curr_menu, &option_index)
             .map_err(ConeRoboError::I0000)?;
-        let quit_attempt = process_events(&mut curr_menu, &mut option_index)?;
+        let quit_attempt = process_events(&menus, &mut curr_menu, &mut option_index)?;
         if quit_attempt {
             break
         }
@@ -76,13 +51,41 @@ pub fn launch_user_interface() -> Result<()> {
     Ok(())
 }
 
+// The number of menus should (for the time being), be known at compile time.
+fn init_menus() -> [Menu; NUM_MENUS] {
+    [
+        Menu {
+            title: "Main Menu",
+            state: MenuState(0),
+            options: &[
+                MenuOption {
+                    option_str: "Component Menu",
+                    action: Action::Navigation { next_menu: MenuState(1) }
+                },
+                MenuOption {
+                    option_str: "Exit TUI",
+                    action: Action::QuitAttempt
+                }
+            ]
+        },
+        Menu {
+            title: "Component Menu",
+            state: MenuState(1),
+            options: &[
+                MenuOption {
+                    option_str: "Back to Main Menu",
+                    action: Action::Navigation { next_menu: MenuState(0) }
+                },
+            ]
+        }
+    ]
+}
+
 fn configure_terminal(stdout: &mut Stdout) -> io::Result<()> {
     let title = "ConeRobo TUI";
-    log::info!("Setting terminal title to {}", title);
     crossterm::execute!(
         stdout,
         DisableFocusChange,
-        DisableMouseCapture,
         SetTitle(title)
     )?;
     Ok(())
@@ -152,7 +155,7 @@ fn display_menu(
 
 // Returns true if a quit attempt was processed.
 // Potential errors include I0000, I0001, I0002.
-fn process_events(curr_menu: &mut Menu, option_index: &mut i32) -> Result<bool> {
+fn process_events(menus: &[Menu], curr_menu: &mut Menu, option_index: &mut i32) -> Result<bool> {
     log::info!("Waiting for event...");
     match read().map_err(ConeRoboError::I0000)? {
         Event::Key(event) => {
@@ -179,7 +182,7 @@ fn process_events(curr_menu: &mut Menu, option_index: &mut i32) -> Result<bool> 
                                         // Action::Unavailable => println!("Option unavailable"),
                                         Action::QuitAttempt => return Ok(true),
                                         Action::Navigation { next_menu } => {
-                                            *curr_menu = get_next_menu(next_menu)?;
+                                            *curr_menu = get_next_menu(menus, next_menu)?;
                                             *option_index = 0;
                                         }
                                     }
@@ -208,8 +211,8 @@ fn process_events(curr_menu: &mut Menu, option_index: &mut i32) -> Result<bool> 
     Ok(false)
 }
 
-fn get_next_menu(next_menu: MenuState) -> Result<Menu> {
-    for menu in MENUS {
+fn get_next_menu(menus: &[Menu], next_menu: MenuState) -> Result<Menu> {
+    for menu in menus {
         if menu.state == next_menu {
             return Ok(menu.clone())
         }
