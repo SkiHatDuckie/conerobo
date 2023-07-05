@@ -23,17 +23,16 @@ use raw_mode_guard::*;
 const NUM_MENUS: usize = 2;
 
 pub fn launch_user_interface() -> Result<()> {
-    // `Menu.state` must be unique for every `Menu` initialized.
-    let menus = init_menus();
-
     log::info!("Enabling raw mode");
     let _raw_mode_guard = RawModeGuard::new()?;
-
-    let mut stdout = stdout();
+    
+    // `Menu.state` must be unique for every `Menu` initialized.
+    let menus = init_menus();
     let mut curr_menu = menus[0].clone();
     let mut option_index = 0i32;
 
     log::info!("Configuring terminal");
+    let mut stdout = stdout();
     configure_terminal(&mut stdout)
         .map_err(ConeRoboError::I0000)?;
 
@@ -73,9 +72,17 @@ fn init_menus() -> [Menu; NUM_MENUS] {
             state: MenuState(1),
             options: &[
                 MenuOption {
+                    option_str: "Load Components",
+                    action: Action::Unavailable
+                },
+                MenuOption {
+                    option_str: "Manage Loaded Components",
+                    action: Action::Unavailable
+                },
+                MenuOption {
                     option_str: "Back to Main Menu",
                     action: Action::Navigation { next_menu: MenuState(0) }
-                },
+                }
             ]
         }
     ]
@@ -179,7 +186,7 @@ fn process_events(menus: &[Menu], curr_menu: &mut Menu, option_index: &mut i32) 
                             match curr_menu.options.get(*option_index as usize) {
                                 Some(menu_option) => {
                                     match menu_option.action {
-                                        // Action::Unavailable => println!("Option unavailable"),
+                                        Action::Unavailable => println!("Option unavailable"),
                                         Action::QuitAttempt => return Ok(true),
                                         Action::Navigation { next_menu } => {
                                             *curr_menu = get_next_menu(menus, next_menu)?;

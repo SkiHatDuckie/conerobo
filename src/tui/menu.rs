@@ -14,7 +14,7 @@ pub struct MenuOption {
 }
 
 pub enum Action {
-    // Unavailable,
+    Unavailable,
     QuitAttempt,
     Navigation { next_menu: MenuState }
 }
