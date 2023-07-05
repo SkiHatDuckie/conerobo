@@ -37,10 +37,13 @@ pub fn launch_user_interface() -> Result<()> {
         .map_err(ConeRoboError::I0000)?;
 
     log::info!("Entering main loop of TUI");
+    let mut msg_queue = MessageQueue::new();
     loop {
-        display_menu(&mut stdout, &curr_menu, &option_index)
+        display_menu(&mut stdout, &curr_menu, &option_index, &mut msg_queue)
             .map_err(ConeRoboError::I0000)?;
-        let quit_attempt = process_events(&menus, &mut curr_menu, &mut option_index)?;
+        let quit_attempt = process_events(
+            &menus, &mut curr_menu, &mut option_index, &mut msg_queue
+        )?;
         if quit_attempt {
             break
         }
@@ -99,7 +102,7 @@ fn configure_terminal(stdout: &mut Stdout) -> io::Result<()> {
 }
 
 fn display_menu(
-    stdout: &mut Stdout, curr_menu: &Menu, option_index: &i32
+    stdout: &mut Stdout, curr_menu: &Menu, option_index: &i32, msg_queue: &mut MessageQueue
 ) -> io::Result<()> {
     log::info!("Displaying menu");
 
@@ -151,7 +154,7 @@ fn display_menu(
         stdout,
         SetForegroundColor(Color::Rgb { r: 227, g: 227, b: 227 }),
         Print(message_border + "\n"),
-        Print("\n"),
+        Print(msg_queue.pop_msg() + "\n"),
         Print(bottom_border),
         ResetColor
     )?;
@@ -162,7 +165,9 @@ fn display_menu(
 
 // Returns true if a quit attempt was processed.
 // Potential errors include I0000, I0001, I0002.
-fn process_events(menus: &[Menu], curr_menu: &mut Menu, option_index: &mut i32) -> Result<bool> {
+fn process_events(
+    menus: &[Menu], curr_menu: &mut Menu, option_index: &mut i32, msg_queue: &mut MessageQueue
+) -> Result<bool> {
     log::info!("Waiting for event...");
     match read().map_err(ConeRoboError::I0000)? {
         Event::Key(event) => {
@@ -186,7 +191,9 @@ fn process_events(menus: &[Menu], curr_menu: &mut Menu, option_index: &mut i32) 
                             match curr_menu.options.get(*option_index as usize) {
                                 Some(menu_option) => {
                                     match menu_option.action {
-                                        Action::Unavailable => println!("Option unavailable"),
+                                        Action::Unavailable => {
+                                            msg_queue.push_msg("Option unavailable".to_owned())
+                                        },
                                         Action::QuitAttempt => return Ok(true),
                                         Action::Navigation { next_menu } => {
                                             *curr_menu = get_next_menu(menus, next_menu)?;

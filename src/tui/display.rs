@@ -1,10 +1,30 @@
-use std::cmp::max;
+use std::{
+    cmp::max,
+    collections::VecDeque
+};
 use crate::error::Result;
 use super::util::get_terminal_width;
 
 pub enum Title {
     Empty,
     Is(String)
+}
+
+pub struct MessageQueue(VecDeque<String>);
+impl MessageQueue {
+    pub fn new() -> Self {
+        MessageQueue(VecDeque::new())
+    }
+    pub fn push_msg(&mut self, msg: String) {
+        self.0.push_back(msg);
+    }
+    /// Returns an empty string if queue is empty.
+    pub fn pop_msg(&mut self) -> String {
+        match self.0.pop_front() {
+            Some(msg) => msg,
+            None => String::new()
+        }
+    }
 }
 
 // Creates a string that can be used as a horizontal border.
