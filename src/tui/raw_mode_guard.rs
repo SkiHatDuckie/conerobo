@@ -1,5 +1,4 @@
 use crossterm::terminal;
-
 use crate::error::{ConeRoboError, Result};
 
 // Ensures that raw mode is disabled in the scenario where the TUI crashes.

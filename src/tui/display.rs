@@ -2,8 +2,10 @@ use std::{
     cmp::max,
     collections::VecDeque
 };
-use crate::error::Result;
-use super::util::get_terminal_width;
+use crate::{
+    error::Result,
+    tui::util::get_terminal_width
+};
 
 pub enum Title {
     Empty,

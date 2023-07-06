@@ -15,10 +15,10 @@ use std::{
     io::{self, Stdout, stdout, Write},
     time::Duration
 };
-use crate::error::{ConeRoboError, Result};
-use display::*;
-use menu::*;
-use raw_mode_guard::*;
+use crate::{
+    error::{ConeRoboError, Result},
+    tui::{display::*, menu::*, raw_mode_guard::*}
+};
 
 const NUM_MENUS: usize = 2;
 
