@@ -34,13 +34,15 @@ pub fn create_border(ch: char, title: Title) -> Result<String> {
         Title::Empty => 0,
         Title::Is(ref val) => val.len() as i32
     };
-    let mut top_border = ch
-        .to_string()
-        .repeat(max((terminal_width - title_width) as usize, 0));
-    match title {
-        Title::Empty => {},
-        Title::Is(ref val) => top_border.push_str(format!("{}", val).as_str())
+    let mut top_border = match title {
+        Title::Empty => String::new(),
+        Title::Is(val) => val
     };
+    top_border.push_str(
+        ch
+            .to_string()
+            .repeat(max((terminal_width - title_width) as usize, 0))
+            .as_str());
 
     Ok(top_border)
 }
