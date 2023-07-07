@@ -8,10 +8,6 @@ pub type Result<T> = std::result::Result<T, ConeRoboError>;
 pub enum ConeRoboError {
     #[error("I-0000: Internal IO error occured")]
     I0000(#[source] std::io::Error),  // Catch-all IO Error
-    #[error("I-0001: Menu option index `{0}` out of bounds")]
-    I0001(String),
-    #[error("I-0002: Next menu `{0}` does not exist")]
-    I0002(String),
 }
 
 impl fmt::Debug for ConeRoboError {

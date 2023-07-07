@@ -1,214 +1,159 @@
-mod display;
-mod menu;
 mod raw_mode_guard;
-mod util;
 
 use crossterm::{
     self,
-    cursor::MoveToColumn,
     event::{DisableFocusChange, Event, KeyCode, KeyEventKind, poll, read},
-    style::{Color, Print, ResetColor, SetForegroundColor},
-    terminal::{Clear, ClearType, SetTitle},
+    terminal::{EnterAlternateScreen, LeaveAlternateScreen, SetTitle},
+};
+use tui::{
+    backend::{Backend, CrosstermBackend},
+    layout::{Constraint, Direction, Layout},
+    style::{Color, Modifier, Style},
+    text::{Span, Spans},
+    widgets::{Block, Borders, Tabs},
+    Frame, Terminal
 };
 use std::{
-    cmp::{min, max},
-    io::{self, Stdout, stdout, Write},
+    io::{self, Stdout, stdout},
     time::Duration
 };
 use crate::{
     error::{ConeRoboError, Result},
-    tui::{display::*, menu::*, raw_mode_guard::*}
+    tui::raw_mode_guard::*
 };
 
-const NUM_MENUS: usize = 2;
+struct AppTUI<'a> {
+    tab_titles: Vec<&'a str>,
+    tab_index: usize
+}
+impl<'a> AppTUI<'a> {
+    fn new() -> AppTUI<'a> {
+        AppTUI {
+            tab_titles: vec!["Home", "Components"],
+            tab_index: 0,
+        }
+    }
+    pub fn next(&mut self) {
+        self.tab_index = (self.tab_index + 1) % self.tab_titles.len();
+    }
+    pub fn previous(&mut self) {
+        if self.tab_index > 0 {
+            self.tab_index -= 1;
+        } else {
+            self.tab_index = self.tab_titles.len() - 1;
+        }
+    }
+}
 
 pub fn launch_user_interface() -> Result<()> {
     log::info!("Enabling raw mode");
     let _raw_mode_guard = RawModeGuard::new()?;
-    
-    // `Menu.state` must be unique for every `Menu` initialized.
-    let menus = init_menus();
-    let mut curr_menu = menus[0].clone();
-    let mut option_index = 0i32;
 
-    log::info!("Configuring terminal");
-    let mut stdout = stdout();
-    configure_terminal(&mut stdout)
+    log::info!("Setting up terminal");
+    let mut terminal = setup_terminal()
         .map_err(ConeRoboError::I0000)?;
 
-    log::info!("Entering main loop of TUI");
-    let mut msg_queue = MessageQueue::new();
-    loop {
-        display_menu(&mut stdout, &curr_menu, &option_index, &mut msg_queue)
-            .map_err(ConeRoboError::I0000)?;
-        let quit_attempt = process_events(
-            &menus, &mut curr_menu, &mut option_index, &mut msg_queue
-        )?;
-        if quit_attempt {
-            break
-        }
-    }
+    log::info!("Instantiating TUI");
+    let app = AppTUI::new();
+    run_app(&mut terminal, app)
+        .map_err(ConeRoboError::I0000)?;
 
-    log::info!("Quit attempt received. Terminating TUI...");
+    log::info!("Restoring terminal");
+    crossterm::execute!(
+        terminal.backend_mut(),
+        LeaveAlternateScreen
+    ).map_err(ConeRoboError::I0000)?;
+
     Ok(())
 }
 
-// The number of menus should (for the time being), be known at compile time.
-fn init_menus() -> [Menu; NUM_MENUS] {
-    [
-        Menu {
-            title: "Main Menu",
-            state: MenuState(0),
-            options: &[
-                MenuOption {
-                    option_str: "Component Menu",
-                    action: Action::Navigation { next_menu: MenuState(1) }
-                },
-                MenuOption {
-                    option_str: "Exit TUI",
-                    action: Action::QuitAttempt
-                }
-            ]
-        },
-        Menu {
-            title: "Component Menu",
-            state: MenuState(1),
-            options: &[
-                MenuOption {
-                    option_str: "Load Components",
-                    action: Action::Unavailable
-                },
-                MenuOption {
-                    option_str: "Manage Loaded Components",
-                    action: Action::Unavailable
-                },
-                MenuOption {
-                    option_str: "Back to Main Menu",
-                    action: Action::Navigation { next_menu: MenuState(0) }
-                }
-            ]
-        }
-    ]
-}
-
-fn configure_terminal(stdout: &mut Stdout) -> io::Result<()> {
-    let title = "ConeRobo TUI";
+fn setup_terminal() -> io::Result<Terminal<CrosstermBackend<Stdout>>> {
+    let mut stdout = stdout();
     crossterm::execute!(
         stdout,
         DisableFocusChange,
-        SetTitle(title)
+        EnterAlternateScreen,
+        SetTitle("ConeRobo TUI")
     )?;
-    Ok(())
+    let backend = CrosstermBackend::new(stdout);
+    Ok(Terminal::new(backend)?)
 }
 
-fn display_menu(
-    stdout: &mut Stdout, curr_menu: &Menu, option_index: &i32, msg_queue: &mut MessageQueue
-) -> io::Result<()> {
-    log::info!("Displaying menu");
+const QUIT_ATTEMPT: bool = true;
 
-    // Top border
-    let top_title = Title::Is(curr_menu.title.to_owned());
-    let top_border = create_border('=', top_title).unwrap();
-    crossterm::queue!(
-        stdout,
-        Clear(ClearType::All),
-        MoveToColumn(0),
-        SetForegroundColor(Color::Rgb { r: 227, g: 227, b: 227 }),
-        Print(top_border + "\n"),
-        ResetColor
-    )?;
-
-    // Options
-    crossterm::queue!(
-        stdout,
-        SetForegroundColor(Color::Rgb { r: 227, g: 227, b: 227 }),
-        Print("Options:\n"),
-        ResetColor
-    )?;
-    for (i, menu_option) in curr_menu.options.iter().enumerate() {
-        if i == *option_index as usize {
-            crossterm::queue!(
-                stdout,
-                SetForegroundColor(Color::Rgb { r: 224, g: 210, b: 58 }),
-                Print("\t["),
-                SetForegroundColor(Color::Rgb { r: 227, g: 227, b: 227 }),
-                Print(menu_option.option_str),
-                SetForegroundColor(Color::Rgb { r: 224, g: 210, b: 58 }),
-                Print("]\n"),
-                ResetColor
-            )?;
-        } else {
-            crossterm::queue!(
-                stdout,
-                SetForegroundColor(Color::Rgb { r: 50, g: 50, b: 50 }),
-                Print(format!("\t {}\n", menu_option.option_str)),
-                ResetColor
-            )?;
-        }
+fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: AppTUI) -> io::Result<()> {
+    loop {
+        terminal.draw(|frame| ui(frame, &app))?;
+        if process_events(&mut app)? == QUIT_ATTEMPT {
+            return Ok(())
+        };
     }
-
-    // Bottom/Message borders
-    let message_border = create_border('-', Title::Empty).unwrap();
-    let bottom_border = create_border('=', Title::Empty).unwrap();
-    crossterm::queue!(
-        stdout,
-        SetForegroundColor(Color::Rgb { r: 227, g: 227, b: 227 }),
-        Print(message_border + "\n"),
-        Print(msg_queue.pop_msg() + "\n"),
-        Print(bottom_border),
-        ResetColor
-    )?;
-
-    stdout.flush()?;
-    Ok(())
 }
 
-// Returns true if a quit attempt was processed.
-// Potential errors include I0000, I0001, I0002.
-fn process_events(
-    menus: &[Menu], curr_menu: &mut Menu, option_index: &mut i32, msg_queue: &mut MessageQueue
-) -> Result<bool> {
+fn ui<B: Backend>(frame: &mut Frame<B>, app: &AppTUI) {
+    let size = frame.size();
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .margin(5)
+        .constraints(
+            [
+                Constraint::Length(3),
+                Constraint::Min(0)
+            ].as_ref()
+        )
+        .split(size);
+    let block = Block::default()
+        .style(Style::default()
+            .bg(Color::White)
+            .fg(Color::Black));
+    frame.render_widget(block, size);
+    let tab_titles = app
+        .tab_titles
+        .iter()
+        .map(|t| {
+            let (first, rest) = t.split_at(1);
+            Spans::from(vec![
+                Span::styled(first, Style::default().fg(Color::Yellow)),
+                Span::styled(rest, Style::default().fg(Color::Green)),
+            ])
+        })
+        .collect();
+    let tabs = Tabs::new(tab_titles)
+        .block(Block::default()
+            .borders(Borders::ALL)
+            .title("Tabs"))
+        .select(app.tab_index)
+        .style(Style::default()
+            .fg(Color::Cyan))
+        .highlight_style(
+            Style::default()
+                .add_modifier(Modifier::BOLD)
+                .bg(Color::Black));
+    frame.render_widget(tabs, chunks[0]);
+    let inner = match app.tab_index {
+        0 => Block::default().title("ConeRobo Homepage").borders(Borders::ALL),
+        1 => Block::default().title("Components").borders(Borders::ALL),
+        _ => unreachable!()
+    };
+    frame.render_widget(inner, chunks[1]);
+}
+
+// Returns `true` if a quit attempt is received.
+fn process_events(app: &mut AppTUI) -> io::Result<bool> {
     log::info!("Waiting for event...");
-    match read().map_err(ConeRoboError::I0000)? {
+    match read()? {
         Event::Key(event) => {
             log::info!("Reading key event");
             match event.kind {
-                KeyEventKind::Press => {},
-                KeyEventKind::Repeat => {},
                 KeyEventKind::Release => {
                     match event.code {
-                        KeyCode::Up => {
-                            log::debug!("Up key released");
-                            *option_index = max(0, *option_index - 1);
-                        },
-                        KeyCode::Down => {
-                            log::debug!("Down key released");
-                            *option_index = min(curr_menu.options.len() as i32 - 1,
-                                                *option_index + 1)
-                        },
-                        KeyCode::Enter => {
-                            log::debug!("Enter key released");
-                            match curr_menu.options.get(*option_index as usize) {
-                                Some(menu_option) => {
-                                    match menu_option.action {
-                                        Action::Unavailable => {
-                                            msg_queue.push_msg("Option unavailable".to_owned())
-                                        },
-                                        Action::QuitAttempt => return Ok(true),
-                                        Action::Navigation { next_menu } => {
-                                            *curr_menu = get_next_menu(menus, next_menu)?;
-                                            *option_index = 0;
-                                        }
-                                    }
-                                }
-                                None => {
-                                    return Err(ConeRoboError::I0001(option_index.to_string()))
-                                }
-                            }
-                        },
+                        KeyCode::Char('q') => return Ok(true),
+                        KeyCode::Right => app.next(),
+                        KeyCode::Left => app.previous(),
                         _ => {}
                     }
                 }
+                _ => {}
             }
         },
         Event::Resize(width, height) => {
@@ -216,23 +161,9 @@ fn process_events(
             let (original_size, new_size) = flush_resize_events((width, height));
             log::debug!("Resized from: {:?}, to: {:?}\r", original_size, new_size);
         },
-        Event::FocusGained => {},
-        Event::FocusLost => {},
-        Event::Mouse(_event) => {},
-        Event::Paste(_event) => {}
+        _ => {}
     }
-
     Ok(false)
-}
-
-fn get_next_menu(menus: &[Menu], next_menu: MenuState) -> Result<Menu> {
-    for menu in menus {
-        if menu.state == next_menu {
-            return Ok(menu.clone())
-        }
-    };
-
-    Err(ConeRoboError::I0002(next_menu.0.to_string()))
 }
 
 // Resize events can occur in batches.
