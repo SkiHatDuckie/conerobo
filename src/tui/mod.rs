@@ -29,7 +29,7 @@ struct AppTUI<'a> {
 impl<'a> AppTUI<'a> {
     fn new() -> AppTUI<'a> {
         AppTUI {
-            tab_titles: vec!["Home", "Components"],
+            tab_titles: vec!["Home", "Components", "Tracker"],
             tab_index: 0,
         }
     }
@@ -133,6 +133,7 @@ fn ui<B: Backend>(frame: &mut Frame<B>, app: &AppTUI) {
     let inner = match app.tab_index {
         0 => Block::default().title("ConeRobo Homepage").borders(Borders::ALL),
         1 => Block::default().title("Components").borders(Borders::ALL),
+        2 => Block::default().title("Tracker").borders(Borders::ALL),
         _ => unreachable!()
     };
     frame.render_widget(inner, chunks[1]);
