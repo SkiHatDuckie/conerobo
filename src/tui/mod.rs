@@ -111,11 +111,9 @@ fn ui<B: Backend>(frame: &mut Frame<B>, app: &AppTUI) {
         .tab_titles
         .iter()
         .map(|t| {
-            let (first, rest) = t.split_at(1);
-            Spans::from(vec![
-                Span::styled(first, Style::default().fg(Color::Yellow)),
-                Span::styled(rest, Style::default().fg(Color::Green)),
-            ])
+            Spans::from(
+                Span::styled(*t, Style::default().fg(Color::Yellow))
+            )
         })
         .collect();
     let tabs = Tabs::new(tab_titles)
@@ -141,10 +139,10 @@ fn ui<B: Backend>(frame: &mut Frame<B>, app: &AppTUI) {
 
 // Returns `true` if a quit attempt is received.
 fn process_events(app: &mut AppTUI) -> io::Result<bool> {
-    log::info!("Waiting for event...");
+    log::debug!("Waiting for event...");
     match read()? {
         Event::Key(event) => {
-            log::info!("Reading key event");
+            log::debug!("Reading key event");
             match event.kind {
                 KeyEventKind::Release => {
                     match event.code {

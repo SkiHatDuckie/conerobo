@@ -41,7 +41,7 @@ fn parse_args(args: &[&str]) {
 fn help() {
     println!(r#"
 Usage:
-    cargo run conerobo --[cmd]
+    conerobo --[cmd]
 
 Commands:
     --help  : Display this message"#);
