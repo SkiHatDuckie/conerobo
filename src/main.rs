@@ -13,15 +13,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>>{
         .write_mode(WriteMode::BufferAndFlush)  // Reduces I/O overhead casued by logging.
         .start()?;
 
-    let args: Vec<String> = env::args().collect();
+    let args = Vec::from_iter(env::args());
+    let args = args.iter().map(AsRef::as_ref).collect::<Vec<_>>();
+    parse_args(&args[..]);
 
+    Ok(())
+}
+
+fn parse_args(args: &[&str]) {
     match args.len() {
         // No arguments passed
         1 => run_conerobo(),
         // One argument passed
         2 => {
-            let cmd = &args[1];
-            match &cmd[..] {
+            match args[1] {
                 "--help" => help(),
                 _ => {
                     eprintln!("Error: Invalid command");
@@ -31,8 +36,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>>{
         },
         _ => help()
     }
-
-    Ok(())
 }
 
 fn help() {
