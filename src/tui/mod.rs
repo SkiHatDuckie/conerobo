@@ -46,14 +46,11 @@ impl<'a> AppTUI<'a> {
 }
 
 pub fn launch_user_interface() -> Result<()> {
-    log::info!("Enabling raw mode");
     let _raw_mode_guard = RawModeGuard::new()?;
 
-    log::info!("Setting up terminal");
     let mut terminal = setup_terminal()
         .map_err(ConeRoboError::I0000)?;
 
-    log::info!("Instantiating TUI");
     let app = AppTUI::new();
     run_app(&mut terminal, app)
         .map_err(ConeRoboError::I0000)?;
@@ -68,6 +65,7 @@ pub fn launch_user_interface() -> Result<()> {
 }
 
 fn setup_terminal() -> io::Result<Terminal<CrosstermBackend<Stdout>>> {
+    log::info!("Setting up terminal");
     let mut stdout = stdout();
     crossterm::execute!(
         stdout,
@@ -79,12 +77,13 @@ fn setup_terminal() -> io::Result<Terminal<CrosstermBackend<Stdout>>> {
     Ok(Terminal::new(backend)?)
 }
 
-const QUIT_ATTEMPT: bool = true;
-
 fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: AppTUI) -> io::Result<()> {
+    log::info!("Running app in terminal");
+    let quit_attempt = true;
     loop {
         terminal.draw(|frame| ui(frame, &app))?;
-        if process_events(&mut app)? == QUIT_ATTEMPT {
+        if process_events(&mut app)? == quit_attempt {
+            log::info!("Quit attempt received. Terminating app");
             return Ok(())
         };
     }
@@ -139,12 +138,11 @@ fn ui<B: Backend>(frame: &mut Frame<B>, app: &AppTUI) {
 
 // Returns `true` if a quit attempt is received.
 fn process_events(app: &mut AppTUI) -> io::Result<bool> {
-    log::debug!("Waiting for event...");
     match read()? {
         Event::Key(event) => {
-            log::debug!("Reading key event");
             match event.kind {
                 KeyEventKind::Release => {
+                    log::debug!("Received key event: {:?}", event.code);
                     match event.code {
                         KeyCode::Char('q') => return Ok(true),
                         KeyCode::Right => app.next(),
@@ -156,9 +154,8 @@ fn process_events(app: &mut AppTUI) -> io::Result<bool> {
             }
         },
         Event::Resize(width, height) => {
-            log::info!("Reading resize event");
             let (original_size, new_size) = flush_resize_events((width, height));
-            log::debug!("Resized from: {:?}, to: {:?}\r", original_size, new_size);
+            log::debug!("Resized from: {:?}, to: {:?}", original_size, new_size);
         },
         _ => {}
     }

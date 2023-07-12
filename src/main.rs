@@ -1,15 +1,22 @@
 mod error;
 mod tui;
 
-use flexi_logger::{FileSpec, Logger, WriteMode};
+use flexi_logger::{Age, Cleanup, Criterion, FileSpec, Logger, Naming, WriteMode};
 use log;
 use std::env;
 
 fn main() -> Result<(), Box<dyn std::error::Error>>{
     let _logger = Logger::try_with_str("debug")?
-        .log_to_file(FileSpec::default()        // All logs will be written to a file.
-            .directory("logs")
-            .basename("ConeRobo"))
+        .log_to_file(
+            FileSpec::default()
+                .directory("logs")
+                .basename("ConeRobo")
+        )
+        .rotate(
+            Criterion::Age(Age::Day),
+            Naming::Timestamps,
+            Cleanup::KeepLogFiles(3)
+        )
         .write_mode(WriteMode::BufferAndFlush)  // Reduces I/O overhead casued by logging.
         .start()?;
 
@@ -48,12 +55,11 @@ Commands:
 }
 
 fn run_conerobo() {
-    log::info!("Running ConeRobo TUI");
+    log::info!("Launching ConeRobo TUI");
     tui::launch_user_interface()
         .map_err(|err| {
             log::error!("Fatal error while running TUI: {:?}", err);
             err
         })
         .unwrap();
-    log::info!("Terminated ConeRobo TUI");
 }
