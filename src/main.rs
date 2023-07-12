@@ -39,11 +39,12 @@ fn parse_args(args: &[&str]) {
 }
 
 fn help() {
-    println!("Usage:
-    cargo run conerobo -- [cmd]
+    println!(r#"
+Usage:
+    cargo run conerobo --[cmd]
 
 Commands:
-    --help  : Display this message");
+    --help  : Display this message"#);
 }
 
 fn run_conerobo() {
