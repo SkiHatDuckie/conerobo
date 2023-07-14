@@ -11,20 +11,20 @@ use tui::{
     style::{Color, Modifier, Style},
     text::{Span, Spans},
     widgets::{Block, Borders, Tabs},
-    Frame, Terminal
+    Frame, Terminal,
 };
 use std::{
     io::{self, Stdout, stdout},
-    time::Duration
+    time::Duration,
 };
 use crate::{
     error::{ConeRoboError, Result},
-    tui::raw_mode_guard::*
+    tui::raw_mode_guard::*,
 };
 
 struct AppTUI<'a> {
     tab_titles: Vec<&'a str>,
-    tab_index: usize
+    tab_index: usize,
 }
 impl<'a> AppTUI<'a> {
     fn new() -> AppTUI<'a> {
@@ -58,7 +58,7 @@ pub fn launch_user_interface() -> Result<()> {
     log::info!("Restoring terminal");
     crossterm::execute!(
         terminal.backend_mut(),
-        LeaveAlternateScreen
+        LeaveAlternateScreen,
     ).map_err(ConeRoboError::I0000)?;
 
     Ok(())
@@ -71,7 +71,7 @@ fn setup_terminal() -> io::Result<Terminal<CrosstermBackend<Stdout>>> {
         stdout,
         DisableFocusChange,
         EnterAlternateScreen,
-        SetTitle("ConeRobo TUI")
+        SetTitle("ConeRobo TUI"),
     )?;
     let backend = CrosstermBackend::new(stdout);
     Ok(Terminal::new(backend)?)
@@ -97,14 +97,15 @@ fn ui<B: Backend>(frame: &mut Frame<B>, app: &AppTUI) {
         .constraints(
             [
                 Constraint::Length(3),
-                Constraint::Min(0)
+                Constraint::Min(0),
             ].as_ref()
         )
         .split(size);
     let block = Block::default()
         .style(Style::default()
             .bg(Color::White)
-            .fg(Color::Black));
+            .fg(Color::Black)
+        );
     frame.render_widget(block, size);
     let tab_titles = app
         .tab_titles
@@ -118,14 +119,15 @@ fn ui<B: Backend>(frame: &mut Frame<B>, app: &AppTUI) {
     let tabs = Tabs::new(tab_titles)
         .block(Block::default()
             .borders(Borders::ALL)
-            .title("Tabs"))
+            .title("Tabs")
+        )
         .select(app.tab_index)
-        .style(Style::default()
-            .fg(Color::Cyan))
+        .style(Style::default().fg(Color::Cyan))
         .highlight_style(
             Style::default()
                 .add_modifier(Modifier::BOLD)
-                .bg(Color::Black));
+                .bg(Color::Black)
+        );
     frame.render_widget(tabs, chunks[0]);
     let inner = match app.tab_index {
         0 => Block::default().title("ConeRobo Homepage").borders(Borders::ALL),
