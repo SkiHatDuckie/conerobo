@@ -1,22 +1,28 @@
+pub struct Tabs<'a> {
+    pub titles: Vec<&'a str>,
+    pub index: usize,
+}
+
 pub struct App<'a> {
-    pub tab_titles: Vec<&'a str>,
-    pub tab_index: usize,
+    pub tabs: Tabs<'a>
 }
 impl<'a> App<'a> {
     pub fn new() -> App<'a> {
         App {
-            tab_titles: vec!["Home", "Components", "Tracker"],
-            tab_index: 0,
+            tabs: Tabs {
+                titles: vec!["Home", "Components", "Tracker"],
+                index: 0,
+            }
         }
     }
     pub fn next(&mut self) {
-        self.tab_index = (self.tab_index + 1) % self.tab_titles.len();
+        self.tabs.index = (self.tabs.index + 1) % self.tabs.titles.len();
     }
     pub fn previous(&mut self) {
-        if self.tab_index > 0 {
-            self.tab_index -= 1;
+        if self.tabs.index > 0 {
+            self.tabs.index -= 1;
         } else {
-            self.tab_index = self.tab_titles.len() - 1;
+            self.tabs.index = self.tabs.titles.len() - 1;
         }
     }
 }

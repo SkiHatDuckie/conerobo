@@ -19,7 +19,7 @@ pub fn draw<B: Backend>(frame: &mut Frame<B>, app: &App) {
         .style(Style::default().bg(Color::White).fg(Color::Black));
     frame.render_widget(block, size);
     let tab_titles = app
-        .tab_titles
+        .tabs.titles
         .iter()
         .map(|t| {
             Spans::from(Span::styled(*t, Style::default().fg(Color::Yellow)))
@@ -27,11 +27,11 @@ pub fn draw<B: Backend>(frame: &mut Frame<B>, app: &App) {
         .collect();
     let tabs = Tabs::new(tab_titles)
         .block(Block::default().borders(Borders::ALL).title("Tabs"))
-        .select(app.tab_index)
+        .select(app.tabs.index)
         .style(Style::default().fg(Color::Cyan))
         .highlight_style(Style::default().add_modifier(Modifier::BOLD).bg(Color::Black));
     frame.render_widget(tabs, chunks[0]);
-    match app.tab_index {
+    match app.tabs.index {
         0 => draw_homepage_tab(frame, chunks[1]),
         1 => draw_components_tab(frame, chunks[1]),
         2 => draw_tracker_tab(frame, chunks[1]),
