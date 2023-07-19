@@ -58,12 +58,16 @@ fn draw_homepage_tab<B: Backend>(frame: &mut Frame<B>, area: Rect) {
 fn draw_components_tab<B: Backend>(frame: &mut Frame<B>, area: Rect) {
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
-        .constraints([Constraint::Min(0)].as_ref())
+        .constraints([Constraint::Length(24), Constraint::Min(0)].as_ref())
         .split(area);
     let block = Block::default()
-        .title("Components")
+        .title("Component Management")
         .borders(Borders::ALL);
     frame.render_widget(block, chunks[0]);
+    let block = Block::default()
+        .title("Currently loaded components")
+        .borders(Borders::ALL);
+    frame.render_widget(block, chunks[1]);
 }
 
 fn draw_tracker_tab<B: Backend>(frame: &mut Frame<B>, area: Rect) {
