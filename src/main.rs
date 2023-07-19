@@ -1,5 +1,7 @@
+mod component;
 mod error;
 mod tui;
+mod virtual_terminal;
 
 use flexi_logger::{Age, Cleanup, Criterion, FileSpec, Logger, Naming, WriteMode};
 use log;
